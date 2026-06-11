@@ -230,7 +230,7 @@ function totalsForPlayer(p){
 }
 
 /* ============== SUPABASE I/O ============== */
-async function loadData(){
+async function loadData(isBackgroundPoll){
   try{
     const { data: rows, error } = await sb.from('pool_data').select('data').eq('id', 1).single();
     if(error) throw error;
@@ -253,7 +253,10 @@ async function loadData(){
     state.error = "Nie udało się połączyć z bazą danych. Sprawdź połączenie.";
   } finally {
     state.loading = false;
-    render();
+    // Avoid wiping the login form (or other in-progress input) on background polls
+    if(!isBackgroundPoll || state.user){
+      render();
+    }
   }
 }
 
@@ -703,7 +706,7 @@ function attachHandlers(){
 
 /* ============== INICJALIZACJA + AKTUALIZACJE NA ŻYWO ============== */
 loadData();
-setInterval(loadData, 5000);
+setInterval(()=>loadData(true), 5000);
 </script>
 </body>
 </html>
