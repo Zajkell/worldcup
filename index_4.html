@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 — Prediction Pool</title>
+<style>
+  :root{
+    --bg-deep:#0a1410;
+    --bg-panel:#101f1a;
+    --bg-card:#142922;
+    --line:#26392f;
+    --gold:#f5c542;
+    --gold-soft:#e0b13a;
+    --green:#1e7a4c;
+    --green-bright:#2ea861;
+    --text:#eef3ee;
+    --text-dim:#9fb3a8;
+    --red:#d9534f;
+    --font-display: 'Anton', 'Arial Narrow', sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family: var(--font-body);
+    background: radial-gradient(ellipse at top, #14231d 0%, var(--bg-deep) 55%, #060c09 100%);
+    color: var(--text);
+    min-height:100vh;
+    line-height:1.5;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  .stadium-glow{
+    position:fixed; top:-200px; left:50%; transform:translateX(-50%);
+    width:1400px; height:700px;
+    background: radial-gradient(ellipse, rgba(46,168,97,0.12) 0%, transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+  .pitch-lines{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.04;
+    background-image:
+      repeating-linear-gradient(90deg, transparent 0 79px, var(--green-bright) 79px 80px);
+  }
+
+  /* NAV */
+  nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 40px;
+    background:rgba(10,20,16,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--font-display);
+    letter-spacing:1px;
+    font-size:1.3rem;
+  }
+  .logo .ball{font-size:1.4rem;}
+  .logo .accent{color:var(--gold);}
+  .nav-links{display:flex; gap:8px; align-items:center;}
+  .nav-btn{
+    padding:9px 18px; border-radius:999px; border:1px solid var(--line);
+    background:transparent; color:var(--text); font-weight:600; font-size:0.85rem;
+    cursor:pointer; transition:.2s; font-family:var(--font-body);
+  }
+  .nav-btn:hover{border-color:var(--gold-soft); color:var(--gold);}
+  .nav-btn.active{background:var(--gold); color:#1a1405; border-color:var(--gold);}
+  .nav-btn.gold{background:var(--gold); color:#1a1405; border-color:var(--gold); font-weight:800;}
+  .nav-btn.gold:hover{background:var(--gold-soft);}
+  .user-chip{
+    font-size:0.8rem; color:var(--text-dim); padding:8px 14px;
+    border:1px solid var(--line); border-radius:999px;
+  }
+
+  main{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 24px 80px; }
+
+  /* HERO */
+  .hero{ text-align:center; padding:90px 20px 60px; }
+  .badge{
+    display:inline-flex; align-items:center; gap:8px;
+    border:1px solid var(--gold-soft); color:var(--gold);
+    padding:7px 18px; border-radius:999px; font-size:0.8rem; font-weight:700;
+    letter-spacing:1.5px; text-transform:uppercase; margin-bottom:28px;
+    background:rgba(245,197,66,0.06);
+  }
+  .hero h1{
+    font-family:var(--font-display);
+    font-size:clamp(2.6rem, 7vw, 5.2rem);
+    line-height:1.05;
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .hero h1 .gold-line{ color:var(--gold); display:block; }
+  .hero p{
+    max-width:640px; margin:28px auto 0; color:var(--text-dim); font-size:1.05rem;
+  }
+  .hero-actions{ display:flex; gap:14px; justify-content:center; margin-top:36px; flex-wrap:wrap; }
+  .btn-primary{
+    background:var(--gold); color:#1a1405; border:none; font-weight:800;
+    padding:16px 32px; border-radius:999px; font-size:0.95rem; cursor:pointer;
+    text-transform:uppercase; letter-spacing:0.5px; transition:.2s;
+    font-family:var(--font-body);
+  }
+  .btn-primary:hover{ background:var(--gold-soft); transform:translateY(-1px); }
+  .btn-secondary{
+    background:transparent; color:var(--text); border:1.5px solid rgba(255,255,255,0.25);
+    font-weight:700; padding:16px 32px; border-radius:999px; font-size:0.95rem; cursor:pointer;
+    text-transform:uppercase; letter-spacing:0.5px; transition:.2s; font-family:var(--font-body);
+  }
+  .btn-secondary:hover{ border-color:var(--gold); color:var(--gold); }
+  .hero-note{ margin-top:18px; font-size:0.8rem; color:var(--text-dim); opacity:0.8; }
+
+  .stats-row{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:56px;
+  }
+  .stat-card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:14px;
+    padding:22px 14px; text-align:center;
+  }
+  .stat-card .icon{ font-size:1.4rem; margin-bottom:8px; color:var(--gold); }
+  .stat-card .num{ font-family:var(--font-display); font-size:1.9rem; }
+  .stat-card .lbl{ font-size:0.7rem; letter-spacing:1.5px; color:var(--text-dim); text-transform:uppercase; margin-top:4px;}
+
+  /* SECTIONS */
+  .section{ margin-top:64px; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;}
+  .section-head h2{ font-family:var(--font-display); font-size:1.8rem; letter-spacing:1px; text-transform:uppercase; }
+  .section-head .gold{ color:var(--gold); }
+  .section-sub{ color:var(--text-dim); font-size:0.85rem; }
+
+  /* LOGIN */
+  .login-wrap{ max-width:420px; margin:80px auto; }
+  .card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:18px; padding:32px;
+  }
+  .card h2{ font-family:var(--font-display); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; font-size:1.6rem; }
+  .card .sub{ color:var(--text-dim); font-size:0.85rem; margin-bottom:24px; }
+  label{ display:block; font-size:0.78rem; color:var(--text-dim); margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; font-weight:700;}
+  input, select{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--bg-panel); color:var(--text); font-size:0.95rem; margin-bottom:16px;
+    font-family:var(--font-body);
+  }
+  input:focus, select:focus{ outline:none; border-color:var(--gold-soft); }
+  .error-msg{ color:var(--red); font-size:0.85rem; margin-bottom:12px; }
+  .quick-users{ margin-top:18px; display:flex; flex-wrap:wrap; gap:6px; }
+  .quick-users button{
+    font-size:0.72rem; padding:5px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--bg-panel); color:var(--text-dim); cursor:pointer; font-family:var(--font-body);
+  }
+  .quick-users button:hover{ border-color:var(--gold-soft); color:var(--gold); }
+
+  /* MATCH LIST */
+  .match-card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:14px;
+    padding:18px 22px; margin-bottom:12px;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  }
+  .match-meta{ font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; min-width:150px;}
+  .match-meta .group{ color:var(--gold); font-weight:700;}
+  .match-teams{ display:flex; align-items:center; gap:14px; flex:1; min-width:220px; font-weight:700; font-size:1.05rem; justify-content:center; }
+  .match-teams .vs{ color:var(--text-dim); font-weight:400; font-size:0.85rem; }
+  .score-input-group{ display:flex; align-items:center; gap:8px; }
+  .score-box{
+    width:48px; padding:10px 0; text-align:center; border-radius:8px; border:1px solid var(--line);
+    background:var(--bg-panel); color:var(--text); font-size:1.1rem; font-weight:800; margin:0;
+    font-family:var(--font-mono);
+  }
+  .score-box:disabled{ opacity:0.4; }
+  .dash{ color:var(--text-dim); font-weight:800; }
+  .save-bet{
+    padding:9px 16px; border-radius:8px; border:none; background:var(--green-bright);
+    color:#06140c; font-weight:800; cursor:pointer; font-size:0.78rem; text-transform:uppercase;
+    letter-spacing:0.5px; font-family:var(--font-body);
+  }
+  .save-bet:disabled{ background:var(--line); color:var(--text-dim); cursor:not-allowed; }
+  .lock-tag{
+    font-size:0.68rem; padding:4px 10px; border-radius:999px; border:1px solid var(--red);
+    color:var(--red); text-transform:uppercase; letter-spacing:1px; font-weight:700;
+  }
+  .result-tag{
+    font-family:var(--font-mono); font-weight:800; font-size:1.3rem; color:var(--gold);
+    min-width:80px; text-align:center;
+  }
+  .points-tag{
+    font-size:0.68rem; padding:4px 10px; border-radius:999px;
+    text-transform:uppercase; letter-spacing:1px; font-weight:800;
+  }
+  .points-3{ background:rgba(46,168,97,0.18); color:var(--green-bright); border:1px solid var(--green-bright); }
+  .points-1{ background:rgba(245,197,66,0.15); color:var(--gold); border:1px solid var(--gold-soft); }
+  .points-0{ background:rgba(217,83,79,0.1); color:var(--red); border:1px solid rgba(217,83,79,0.4); }
+
+  .admin-result-edit{ display:flex; align-items:center; gap:6px; }
+  .admin-result-edit input{ width:44px; margin:0; padding:8px 0; text-align:center; }
+
+  /* LEADERBOARD */
+  .leader-table{ width:100%; border-collapse:collapse; background:var(--bg-card); border-radius:14px; overflow:hidden; border:1px solid var(--line); }
+  .leader-table th, .leader-table td{ padding:14px 18px; text-align:left; font-size:0.9rem; }
+  .leader-table th{ background:var(--bg-panel); color:var(--text-dim); text-transform:uppercase; font-size:0.7rem; letter-spacing:1.5px; }
+  .leader-table tr:not(:last-child) td{ border-bottom:1px solid var(--line); }
+  .rank-cell{ font-family:var(--font-display); font-size:1.2rem; color:var(--gold); width:50px; }
+  .rank-1{ color:var(--gold); }
+  .rank-2{ color:#cfd8d4; }
+  .rank-3{ color:#c98a4a; }
+  .pts-cell{ font-family:var(--font-mono); font-weight:800; font-size:1.05rem; }
+
+  /* BAR CHART */
+  .chart-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:14px; padding:24px; }
+  .bar-row{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .bar-name{ width:90px; font-size:0.85rem; font-weight:700; flex-shrink:0; }
+  .bar-track{ flex:1; background:var(--bg-panel); border-radius:8px; height:26px; overflow:hidden; position:relative; }
+  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--green) 0%, var(--gold) 100%); border-radius:8px; transition:width .6s ease; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; }
+  .bar-fill span{ font-family:var(--font-mono); font-size:0.78rem; font-weight:800; color:#06140c; }
+
+  /* SPECIAL BETS */
+  .special-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media(max-width:760px){ .special-grid{ grid-template-columns:1fr; } }
+  .special-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:14px; padding:24px; }
+  .special-card h3{ font-family:var(--font-display); letter-spacing:1px; text-transform:uppercase; font-size:1.2rem; margin-bottom:4px; }
+  .special-card .deadline{ font-size:0.75rem; color:var(--gold); margin-bottom:16px; text-transform:uppercase; letter-spacing:1px;}
+  .current-pick{ font-size:0.85rem; color:var(--text-dim); margin-top:10px; }
+  .current-pick b{ color:var(--text); }
+  .special-locked{ font-size:0.85rem; color:var(--red); margin-top:10px; font-weight:700;}
+
+  .all-picks{ margin-top:14px; font-size:0.8rem; color:var(--text-dim); }
+  .all-picks .pick-row{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); }
+  .all-picks .pick-row:last-child{ border-bottom:none; }
+  .winner-set{ color:var(--green-bright); font-weight:700; }
+
+  /* ADMIN */
+  .admin-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media(max-width:760px){ .admin-grid{ grid-template-columns:1fr; } }
+
+  .pill-toggle{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+
+  .filter-row{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+  .filter-btn{
+    padding:7px 16px; border-radius:999px; border:1px solid var(--line); background:transparent;
+    color:var(--text-dim); font-size:0.78rem; font-weight:700; cursor:pointer; text-transform:uppercase;
+    letter-spacing:1px; font-family:var(--font-body);
+  }
+  .filter-btn.active{ background:var(--gold); color:#1a1405; border-color:var(--gold); }
+
+  footer{ text-align:center; padding:40px 20px; color:var(--text-dim); font-size:0.8rem; border-top:1px solid var(--line); margin-top:80px; }
+  footer .gold{ color:var(--gold); }
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="stadium-glow"></div>
+<div class="pitch-lines"></div>
+
+<div id="app"></div>
+
+<script>
+/* ============== DATA ============== */
+const PLAYERS = ["Kachel","Ssaku","Włodi","Gercu","Shakur","Pędzel","Bonsu","Kaczor","Rejbik"];
+const ADMIN = "Admin";
+
+// Teams for the 2026 World Cup demo set
+const TEAMS = ["Mexico","South Africa","South Korea","Czechia","Canada","Bosnia and Herzegovina","Qatar","Switzerland","Brazil","Morocco","Haiti","Scotland","USA","Paraguay","Australia","Türkiye","France","Senegal","England","Croatia","Spain","Cape Verde","Argentina","Algeria"];
+
+// Real World Cup 2026 group stage fixtures (group stage: June 11 - June 27)
+function genMatches(){
+  const fx = [
+    // Group A
+    {group:"Group A", home:"Mexico", away:"South Africa", kickoff:"2026-06-11T19:00:00Z"},
+    {group:"Group A", home:"South Korea", away:"Czechia", kickoff:"2026-06-12T02:00:00Z"},
+    // Group B
+    {group:"Group B", home:"Canada", away:"Bosnia and Herzegovina", kickoff:"2026-06-12T19:00:00Z"},
+    {group:"Group B", home:"Qatar", away:"Switzerland", kickoff:"2026-06-13T19:00:00Z"},
+    // Group D
+    {group:"Group D", home:"USA", away:"Paraguay", kickoff:"2026-06-13T01:00:00Z"},
+    {group:"Group D", home:"Australia", away:"Türkiye", kickoff:"2026-06-13T05:00:00Z"},
+    // Group C
+    {group:"Group C", home:"Brazil", away:"Morocco", kickoff:"2026-06-13T22:00:00Z"},
+    {group:"Group C", home:"Haiti", away:"Scotland", kickoff:"2026-06-14T01:00:00Z"},
+    // Group I
+    {group:"Group I", home:"France", away:"Senegal", kickoff:"2026-06-16T19:00:00Z"},
+    // Group L
+    {group:"Group L", home:"England", away:"Croatia", kickoff:"2026-06-17T20:00:00Z"},
+    // Group H
+    {group:"Group H", home:"Spain", away:"Cape Verde", kickoff:"2026-06-15T17:00:00Z"},
+    // Group J
+    {group:"Group J", home:"Argentina", away:"Algeria", kickoff:"2026-06-16T21:00:00Z"},
+    // Group A round 2
+    {group:"Group A", home:"Czechia", away:"South Africa", kickoff:"2026-06-18T17:00:00Z"},
+    {group:"Group A", home:"Mexico", away:"South Korea", kickoff:"2026-06-19T02:00:00Z"},
+    // Group B round 2
+    {group:"Group B", home:"Switzerland", away:"Bosnia and Herzegovina", kickoff:"2026-06-18T20:00:00Z"},
+    {group:"Group B", home:"Canada", away:"Qatar", kickoff:"2026-06-18T23:00:00Z"}
+  ];
+  return fx.map((m,i)=>({
+    id:"m"+(i+1),
+    group:m.group, home:m.home, away:m.away,
+    kickoff:m.kickoff,
+    result:null
+  }));
+}
+
+/* ============== STATE ============== */
+let state = {
+  user: null, // {name, isAdmin}
+  matches: genMatches(),
+  bets: {
+    "Ssaku|m1": {home:3, away:0},
+    "Włodi|m1": {home:2, away:1},
+    "Gercu|m1": {home:2, away:0},
+    "Shakur|m1": {home:3, away:0},
+    "Kachel|m1": {home:4, away:2},
+    "Pędzel|m1": {home:2, away:1},
+    "Bonsu|m1": {home:1, away:1},
+    "Kaczor|m1": {home:3, away:1},
+    "Rejbik|m1": {home:2, away:1}
+  },
+  specialPicks: {}, // specialPicks["player"] = {topScorer, championTeam}
+  specialResult: { topScorer: null, championTeam: null }, // admin sets at end
+  credentials: {}, // credentials["player"] = "password" — set on first login
+  view: "home"
+};
+
+const SPECIAL_DEADLINE = new Date("2026-06-12T23:59:59");
+const TOP_SCORERS = ["Mbappé","Haaland","Vinícius Jr.","Bellingham","Lautaro Martínez","Raphinha","Lewandowski","Julián Álvarez"];
+
+/* ============== HELPERS ============== */
+function isLocked(match){
+  return new Date() >= new Date(new Date(match.kickoff).getTime() - 1000*60*60);
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + " · " + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+function calcPoints(bet, result){
+  if(!bet || !result) return null;
+  if(bet.home === result.home && bet.away === result.away) return 3;
+  const betOutcome = bet.home > bet.away ? 'H' : bet.home < bet.away ? 'A' : 'D';
+  const resOutcome = result.home > result.away ? 'H' : result.home < result.away ? 'A' : 'D';
+  return betOutcome === resOutcome ? 1 : 0;
+}
+function specialDeadlinePassed(){
+  return new Date() >= SPECIAL_DEADLINE;
+}
+
+function totalsForPlayer(p){
+  let pts=0, won=0, lost=0, pushd=0;
+  state.matches.forEach(m=>{
+    if(!m.result) return;
+    const bet = state.bets[p+"|"+m.id];
+    if(!bet) return;
+    const r = calcPoints(bet, m.result);
+    if(r===3){pts+=3; won++;}
+    else if(r===1){pts+=1; won++;}
+    else {lost++;}
+  });
+  // special bets
+  if(state.specialResult.topScorer && state.specialPicks[p]?.topScorer === state.specialResult.topScorer) pts+=5;
+  if(state.specialResult.championTeam && state.specialPicks[p]?.championTeam === state.specialResult.championTeam) pts+=5;
+  return {pts, won, lost};
+}
+
+/* ============== RENDER ============== */
+function render(){
+  const app = document.getElementById('app');
+  if(!state.user){
+    app.innerHTML = renderNav() + renderLogin();
+  } else if(state.view === "matches"){
+    app.innerHTML = renderNav() + renderMatches();
+  } else if(state.view === "leaderboard"){
+    app.innerHTML = renderNav() + renderLeaderboard();
+  } else if(state.view === "special"){
+    app.innerHTML = renderNav() + renderSpecial();
+  } else if(state.view === "admin"){
+    app.innerHTML = renderNav() + renderAdmin();
+  } else {
+    app.innerHTML = renderNav() + renderHome();
+  }
+  attachHandlers();
+}
+
+function renderNav(){
+  if(!state.user){
+    return `
+    <nav>
+      <div class="logo"><span class="ball">⚽</span> WORLD CUP <span class="accent">2026</span></div>
+      <div class="nav-links"></div>
+    </nav>`;
+  }
+  const v = state.view;
+  return `
+  <nav>
+    <div class="logo"><span class="ball">⚽</span> WORLD CUP <span class="accent">2026</span></div>
+    <div class="nav-links">
+      <button class="nav-btn ${v==='home'?'active':''}" data-nav="home">Home</button>
+      <button class="nav-btn ${v==='matches'?'active':''}" data-nav="matches">Matches</button>
+      <button class="nav-btn ${v==='leaderboard'?'active':''}" data-nav="leaderboard">Leaderboard</button>
+      <button class="nav-btn ${v==='special'?'active':''}" data-nav="special">Special Bets</button>
+      ${state.user.isAdmin ? `<button class="nav-btn ${v==='admin'?'active':''}" data-nav="admin">Admin</button>` : ''}
+      <span class="user-chip">${state.user.isAdmin ? '👁 Observer · ' : '👤 '}${state.user.name}</span>
+      <button class="nav-btn" data-nav="logout">Log out</button>
+    </div>
+  </nav>`;
+}
+
+/* ---------- LOGIN ---------- */
+function renderLogin(){
+  return `
+  <main>
+    <div class="hero">
+      <div class="badge">🏆 World Cup 2026</div>
+      <h1>Predict. Compete.<span class="gold-line">Claim the Glory.</span></h1>
+      <p>The ultimate World Cup betting pool for our crew. 9 players, every match, one champion. Guess the scores, climb the leaderboard, and prove you know football best.</p>
+    </div>
+    <div class="login-wrap">
+      <div class="card">
+        <h2>Enter the Pool</h2>
+        <div class="sub">Sign in with your name and password.</div>
+        <div id="login-error" class="error-msg" style="display:none;"></div>
+        <label>Name</label>
+        <select id="login-name">
+          ${PLAYERS.map(p=>`<option value="${p}">${p}</option>`).join('')}
+          <option value="${ADMIN}">Admin (Observer)</option>
+        </select>
+        <label>Password</label>
+        <input id="login-pass" type="password" placeholder="Enter password">
+        <button class="btn-primary" style="width:100%;" id="login-btn">Enter the Pool 🏆</button>
+        <div class="quick-users">
+          ${PLAYERS.map(p=>`<button data-quick="${p}">${p}</button>`).join('')}
+          <button data-quick="${ADMIN}">Admin</button>
+        </div>
+        <div style="margin-top:14px; font-size:0.72rem; color:var(--text-dim);">First time logging in? Just type any password — it will be saved as your account password for next time.</div>
+      </div>
+    </div>
+  </main>`;
+}
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  const played = state.matches.filter(m=>m.result).length;
+  const next = state.matches.find(m=>!m.result);
+  return `
+  <main>
+    <div class="hero">
+      <div class="badge">🏆 World Cup 2026</div>
+      <h1>Predict. Compete.<span class="gold-line">Claim the Glory.</span></h1>
+      <p>The ultimate World Cup betting pool for our crew. 9 players, every match, one champion. Guess the scores, climb the leaderboard, and prove you know football best.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" data-nav="matches">Enter the Pool 🏆</button>
+        <button class="btn-secondary" data-nav="leaderboard">View Leaderboard</button>
+      </div>
+      <div class="hero-note">Betting closes 1 hour before each match. Special bets due by Friday 12.06.2026.</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="icon">👥</div><div class="num">9</div><div class="lbl">Players</div></div>
+      <div class="stat-card"><div class="icon">🏆</div><div class="num">${state.matches.length}</div><div class="lbl">Matches</div></div>
+      <div class="stat-card"><div class="icon">⏱</div><div class="num">${played}</div><div class="lbl">Played</div></div>
+      <div class="stat-card"><div class="icon">🎯</div><div class="num">5</div><div class="lbl">Points Max</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Next <span class="gold">Match</span></h2>
+        <div class="section-sub">${next ? fmtDate(next.kickoff) : 'All matches played'}</div>
+      </div>
+      ${next ? renderMatchCard(next) : '<div class="card">Tournament complete — check the leaderboard!</div>'}
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Top of the <span class="gold">Table</span></h2>
+        <div class="section-sub"><button class="btn-secondary" style="padding:8px 18px;" data-nav="leaderboard">Full leaderboard →</button></div>
+      </div>
+      ${renderLeaderboardTable(3)}
+    </div>
+  </main>`;
+}
+
+/* ---------- MATCHES ---------- */
+function renderMatches(){
+  const upcoming = state.matches.filter(m=>!m.result);
+  const finished = state.matches.filter(m=>m.result);
+  return `
+  <main>
+    <div class="section" style="margin-top:40px;">
+      <div class="section-head">
+        <h2>Upcoming <span class="gold">Matches</span></h2>
+        <div class="section-sub">Bets lock 1 hour before kickoff</div>
+      </div>
+      ${upcoming.map(renderMatchCard).join('') || '<div class="card">No upcoming matches.</div>'}
+    </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Finished <span class="gold">Matches</span></h2>
+        <div class="section-sub">Your bet vs final result</div>
+      </div>
+      ${finished.map(renderMatchCard).join('') || '<div class="card">No matches played yet.</div>'}
+    </div>
+  </main>`;
+}
+
+function renderMatchCard(m){
+  const locked = isLocked(m);
+  const me = state.user.isAdmin ? null : state.user.name;
+  const myBet = me ? state.bets[me+"|"+m.id] : null;
+  const result = m.result;
+
+  let rightSide = '';
+  if(state.user.isAdmin){
+    rightSide = `
+      <div class="admin-result-edit">
+        <input type="number" min="0" max="20" class="score-box" id="res-home-${m.id}" value="${result?result.home:''}" placeholder="-">
+        <span class="dash">:</span>
+        <input type="number" min="0" max="20" class="score-box" id="res-away-${m.id}" value="${result?result.away:''}" placeholder="-">
+        <button class="save-bet" data-save-result="${m.id}">Save Result</button>
+      </div>`;
+  } else if(result){
+    rightSide = `
+      <div class="result-tag">${result.home} : ${result.away}</div>
+      ${myBet ? renderPointsTag(calcPoints(myBet, result)) : '<span class="lock-tag">No Bet</span>'}
+    `;
+  } else if(locked){
+    rightSide = `
+      <div class="score-input-group">
+        <input type="number" class="score-box" disabled value="${myBet?myBet.home:'-'}">
+        <span class="dash">:</span>
+        <input type="number" class="score-box" disabled value="${myBet?myBet.away:'-'}">
+      </div>
+      <span class="lock-tag">🔒 Locked</span>`;
+  } else {
+    rightSide = `
+      <div class="score-input-group">
+        <input type="number" min="0" max="20" class="score-box" id="bet-home-${m.id}" value="${myBet?myBet.home:''}" placeholder="-">
+        <span class="dash">:</span>
+        <input type="number" min="0" max="20" class="score-box" id="bet-away-${m.id}" value="${myBet?myBet.away:''}" placeholder="-">
+      </div>
+      <button class="save-bet" data-save-bet="${m.id}">Save Bet</button>`;
+  }
+
+  return `
+  <div class="match-card">
+    <div class="match-meta"><span class="group">${m.group}</span><br>${fmtDate(m.kickoff)}</div>
+    <div class="match-teams">${m.home} <span class="vs">vs</span> ${m.away}</div>
+    ${rightSide}
+  </div>`;
+}
+
+function renderPointsTag(pts){
+  if(pts===3) return '<span class="points-tag points-3">+3 Exact!</span>';
+  if(pts===1) return '<span class="points-tag points-1">+1 Result</span>';
+  if(pts===0) return '<span class="points-tag points-0">+0</span>';
+  return '';
+}
+
+/* ---------- LEADERBOARD ---------- */
+function renderLeaderboardTable(limit){
+  const rows = PLAYERS.map(p=>({name:p, ...totalsForPlayer(p)}))
+    .sort((a,b)=>b.pts-a.pts);
+  const list = limit ? rows.slice(0,limit) : rows;
+  return `
+  <table class="leader-table">
+    <thead><tr><th>#</th><th>Player</th><th>Pts</th><th>Won</th><th>Lost</th></tr></thead>
+    <tbody>
+      ${list.map((r,i)=>`
+        <tr>
+          <td class="rank-cell rank-${i+1}">${i+1}</td>
+          <td>${r.name}</td>
+          <td class="pts-cell">${r.pts}</td>
+          <td>${r.won}</td>
+          <td>${r.lost}</td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderLeaderboard(){
+  const rows = PLAYERS.map(p=>({name:p, ...totalsForPlayer(p)}))
+    .sort((a,b)=>b.pts-a.pts);
+  const max = Math.max(1, ...rows.map(r=>r.pts));
+  return `
+  <main>
+    <div class="section" style="margin-top:40px;">
+      <div class="section-head">
+        <h2>Live <span class="gold">Leaderboard</span></h2>
+        <div class="section-sub">Updated automatically with match results</div>
+      </div>
+      ${renderLeaderboardTable()}
+    </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Points <span class="gold">Chart</span></h2>
+        <div class="section-sub">Total points per player</div>
+      </div>
+      <div class="chart-card">
+        ${rows.map(r=>{
+          const pct = Math.round((r.pts/max)*100);
+          return `
+          <div class="bar-row">
+            <div class="bar-name">${r.name}</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${pct}%;"><span>${r.pts} pts</span></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </main>`;
+}
+
+/* ---------- SPECIAL BETS ---------- */
+function renderSpecial(){
+  const locked = specialDeadlinePassed();
+  const me = state.user.isAdmin ? null : state.user.name;
+  const myPick = me ? (state.specialPicks[me] || {}) : {};
+
+  function options(list, current, key){
+    return `<option value="">— Select —</option>` + list.map(x=>
+      `<option value="${x}" ${current===x?'selected':''}>${x}</option>`).join('');
+  }
+
+  const scorerCard = `
+    <div class="special-card">
+      <h3>👑 King of Goals</h3>
+      <div class="deadline">Locks Friday 12.06.2026 · +5 pts if correct</div>
+      ${state.specialResult.topScorer ? `<div class="all-picks"><div class="pick-row"><span>Winner set:</span><span class="winner-set">${state.specialResult.topScorer}</span></div></div>` : ''}
+      ${!state.user.isAdmin ? `
+        ${locked ? `<div class="special-locked">🔒 Picks locked</div>
+          <div class="current-pick">Your pick: <b>${myPick.topScorer || '— none —'}</b></div>` : `
+          <label>Your pick for top scorer</label>
+          <select id="pick-scorer">${options(TOP_SCORERS, myPick.topScorer)}</select>
+          <button class="save-bet" data-save-special="topScorer" style="width:100%; margin-top:6px;">Save Pick</button>
+        `}
+      ` : `
+        <div class="all-picks">
+          ${PLAYERS.map(p=>`<div class="pick-row"><span>${p}</span><span>${state.specialPicks[p]?.topScorer || '—'}</span></div>`).join('')}
+        </div>
+      `}
+    </div>`;
+
+  const championCard = `
+    <div class="special-card">
+      <h3>🏆 Trophy Winner</h3>
+      <div class="deadline">Locks Friday 12.06.2026 · +5 pts if correct</div>
+      ${state.specialResult.championTeam ? `<div class="all-picks"><div class="pick-row"><span>Winner set:</span><span class="winner-set">${state.specialResult.championTeam}</span></div></div>` : ''}
+      ${!state.user.isAdmin ? `
+        ${locked ? `<div class="special-locked">🔒 Picks locked</div>
+          <div class="current-pick">Your pick: <b>${myPick.championTeam || '— none —'}</b></div>` : `
+          <label>Your pick for tournament winner</label>
+          <select id="pick-champion">${options(TEAMS, myPick.championTeam)}</select>
+          <button class="save-bet" data-save-special="championTeam" style="width:100%; margin-top:6px;">Save Pick</button>
+        `}
+      ` : `
+        <div class="all-picks">
+          ${PLAYERS.map(p=>`<div class="pick-row"><span>${p}</span><span>${state.specialPicks[p]?.championTeam || '—'}</span></div>`).join('')}
+        </div>
+      `}
+    </div>`;
+
+  return `
+  <main>
+    <div class="section" style="margin-top:40px;">
+      <div class="section-head">
+        <h2>Special <span class="gold">Bets</span></h2>
+        <div class="section-sub">${locked ? 'Locked' : 'Open until Friday 12.06.2026, 23:59'}</div>
+      </div>
+      <div class="special-grid">
+        ${scorerCard}
+        ${championCard}
+      </div>
+    </div>
+  </main>`;
+}
+
+/* ---------- ADMIN ---------- */
+function renderAdmin(){
+  return `
+  <main>
+    <div class="section" style="margin-top:40px;">
+      <div class="section-head">
+        <h2>Admin <span class="gold">Panel</span></h2>
+        <div class="section-sub">Enter results & finalize special bets — observer view, no betting</div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="card">
+          <h2>Finalize King of Goals</h2>
+          <div class="sub">Set the actual top scorer once the tournament ends</div>
+          <select id="admin-scorer">
+            <option value="">— Select —</option>
+            ${TOP_SCORERS.map(s=>`<option value="${s}" ${state.specialResult.topScorer===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class="save-bet" id="set-scorer" style="width:100%;">Set King of Goals</button>
+        </div>
+        <div class="card">
+          <h2>Finalize Trophy Winner</h2>
+          <div class="sub">Set the actual World Cup champion</div>
+          <select id="admin-champion">
+            <option value="">— Select —</option>
+            ${TEAMS.map(t=>`<option value="${t}" ${state.specialResult.championTeam===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+          <button class="save-bet" id="set-champion" style="width:100%;">Set Trophy Winner</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Match <span class="gold">Results</span></h2>
+        <div class="section-sub">Enter scores to auto-calculate points</div>
+      </div>
+      ${state.matches.map(renderMatchCard).join('')}
+    </div>
+  </main>`;
+}
+
+/* ============== HANDLERS ============== */
+function attachHandlers(){
+  document.querySelectorAll('[data-quick]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.getElementById('login-name').value = b.dataset.quick;
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-pass').focus();
+    });
+  });
+
+  const loginBtn = document.getElementById('login-btn');
+  if(loginBtn) loginBtn.addEventListener('click', ()=>{
+    const name = document.getElementById('login-name').value;
+    const pass = document.getElementById('login-pass').value;
+    const err = document.getElementById('login-error');
+    err.style.display = 'none';
+    if(!pass){
+      err.textContent = 'Please enter a password.';
+      err.style.display = 'block';
+      return;
+    }
+    if(!state.credentials[name]){
+      // First login for this account — set the password
+      state.credentials[name] = pass;
+    } else if(state.credentials[name] !== pass){
+      err.textContent = 'Incorrect password.';
+      err.style.display = 'block';
+      return;
+    }
+    state.user = { name, isAdmin: name === ADMIN };
+    state.view = 'home';
+    render();
+  });
+
+  document.querySelectorAll('[data-nav]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const v = b.dataset.nav;
+      if(v === 'logout'){ state.user = null; state.view='home'; render(); return; }
+      state.view = v;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-save-bet]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id = b.dataset.saveBet;
+      const h = document.getElementById('bet-home-'+id).value;
+      const a = document.getElementById('bet-away-'+id).value;
+      if(h==='' || a==='') return;
+      state.bets[state.user.name+"|"+id] = {home:parseInt(h), away:parseInt(a)};
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-save-result]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id = b.dataset.saveResult;
+      const h = document.getElementById('res-home-'+id).value;
+      const a = document.getElementById('res-away-'+id).value;
+      if(h==='' || a==='') return;
+      const m = state.matches.find(x=>x.id===id);
+      m.result = {home:parseInt(h), away:parseInt(a)};
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-save-special]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const key = b.dataset.saveSpecial;
+      const val = key==='topScorer' ? document.getElementById('pick-scorer').value : document.getElementById('pick-champion').value;
+      if(!val) return;
+      if(!state.specialPicks[state.user.name]) state.specialPicks[state.user.name] = {};
+      state.specialPicks[state.user.name][key] = val;
+      render();
+    });
+  });
+
+  const setScorer = document.getElementById('set-scorer');
+  if(setScorer) setScorer.addEventListener('click', ()=>{
+    state.specialResult.topScorer = document.getElementById('admin-scorer').value || null;
+    render();
+  });
+  const setChampion = document.getElementById('set-champion');
+  if(setChampion) setChampion.addEventListener('click', ()=>{
+    state.specialResult.championTeam = document.getElementById('admin-champion').value || null;
+    render();
+  });
+}
+
+render();
+</script>
+</body>
+</html>
