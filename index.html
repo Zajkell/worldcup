@@ -130,6 +130,7 @@
   .stat-card .icon{font-size:1.4rem; margin-bottom:8px; color:var(--gold);}
   .loading{text-align:center; padding:80px 20px; color:var(--text-dim);}
   .err-banner{background:rgba(217,83,79,0.1); border:1px solid var(--red); color:var(--red); padding:12px 18px; border-radius:10px; margin-bottom:18px; font-size:0.85rem;}
+  .success-banner{background:rgba(46,168,97,0.12); border:1px solid var(--green-bright); color:var(--green-bright); padding:12px 18px; border-radius:10px; margin-bottom:18px; font-size:0.85rem; font-weight:700;}
 </style>
 </head>
 <body>
@@ -255,7 +256,8 @@ let state = {
   view: "home",
   data: null,
   loading: true,
-  error: null
+  error: null,
+  successMessage: null
 };
 
 /* ============== POMOCNICZE ============== */
@@ -327,7 +329,7 @@ async function loadData(isBackgroundPoll){
 
 // Fetches the freshest data, applies a mutation function, then writes back.
 // Reduces (but does not fully eliminate) overwrite collisions between concurrent users.
-async function mergeAndSave(mutate){
+async function mergeAndSave(mutate, successMsg){
   try{
     const { data: rows, error } = await sb.from('pool_data').select('data').eq('id', 1).single();
     if(error) throw error;
@@ -345,6 +347,10 @@ async function mergeAndSave(mutate){
     if(writeErr) throw writeErr;
     state.data = updated;
     state.error = null;
+    if(successMsg){
+      state.successMessage = successMsg;
+      setTimeout(()=>{ state.successMessage = null; render(); }, 2500);
+    }
   } catch(e){
     console.error(e);
     state.error = "Nie udało się zapisać zmian. Spróbuj ponownie.";
@@ -424,6 +430,10 @@ function errBanner(){
   return state.error ? `<div class="err-banner">${state.error}</div>` : '';
 }
 
+function successBanner(){
+  return state.successMessage ? `<div class="success-banner">${state.successMessage}</div>` : '';
+}
+
 function renderNav(){
   if(!state.user){
     return `<nav><div class="logo">⚽ WORLD CUP <span class="accent">2026</span></div><div class="nav-links"></div></nav>`;
@@ -448,7 +458,7 @@ function renderNav(){
 function renderLogin(){
   return `
   <main>
-    ${errBanner()}
+    ${errBanner()}${successBanner()}
     <div class="hero">
       <div class="badge">🏆 World Cup 2026</div>
       <h1>Przewiduj. Rywalizuj.<span class="gold-line">Zdobądź chwałę.</span></h1>
@@ -484,7 +494,7 @@ function renderHome(){
   const rows = PLAYERS.map(p=>({name:p, ...totalsForPlayer(p)})).sort((a,b)=>b.pts-a.pts);
   return `
   <main>
-    ${errBanner()}
+    ${errBanner()}${successBanner()}
     <div class="hero">
       <div class="badge">🏆 World Cup 2026</div>
       <h1>Przewiduj. Rywalizuj.<span class="gold-line">Zdobądź chwałę.</span></h1>
@@ -519,7 +529,7 @@ function renderMatches(){
   const finished = FIXTURES.filter(m=>data.results[m.id]);
   return `
   <main>
-    ${errBanner()}
+    ${errBanner()}${successBanner()}
     <div class="section" style="margin-top:40px;">
       <div class="section-head">
         <h2>Nadchodzące <span class="gold">mecze</span></h2>
@@ -612,7 +622,7 @@ function renderLeaderboard(){
   const max = Math.max(1, ...rows.map(r=>r.pts));
   return `
   <main>
-    ${errBanner()}
+    ${errBanner()}${successBanner()}
     <div class="section" style="margin-top:40px;">
       <div class="section-head">
         <h2>Tabela <span class="gold">na żywo</span></h2>
@@ -687,7 +697,7 @@ function renderSpecial(){
 
   return `
   <main>
-    ${errBanner()}
+    ${errBanner()}${successBanner()}
     <div class="section" style="margin-top:40px;">
       <div class="section-head">
         <h2>Zakłady <span class="gold">specjalne</span></h2>
@@ -705,7 +715,7 @@ function renderAdmin(){
   const data = state.data;
   return `
   <main>
-    ${errBanner()}
+    ${errBanner()}${successBanner()}
     <div class="section" style="margin-top:40px;">
       <div class="section-head">
         <h2>Panel <span class="gold">admina</span></h2>
@@ -804,7 +814,7 @@ function attachHandlers(){
       const h = document.getElementById('bet-home-'+id).value;
       const a = document.getElementById('bet-away-'+id).value;
       if(h==='' || a==='') return;
-      await mergeAndSave(d => ({...d, bets: {...d.bets, [state.user.name+"|"+id]: {home:parseInt(h), away:parseInt(a)}}}));
+      await mergeAndSave(d => ({...d, bets: {...d.bets, [state.user.name+"|"+id]: {home:parseInt(h), away:parseInt(a)}}}), "Zakład zapisany ✓");
     });
   });
 
@@ -814,7 +824,7 @@ function attachHandlers(){
       const h = document.getElementById('res-home-'+id).value;
       const a = document.getElementById('res-away-'+id).value;
       if(h==='' || a==='') return;
-      await mergeAndSave(d => ({...d, results: {...d.results, [id]: {home:parseInt(h), away:parseInt(a)}}}));
+      await mergeAndSave(d => ({...d, results: {...d.results, [id]: {home:parseInt(h), away:parseInt(a)}}}), "Wynik zapisany ✓");
     });
   });
 
@@ -823,19 +833,19 @@ function attachHandlers(){
       const key = b.dataset.saveSpecial;
       const val = key==='topScorer' ? document.getElementById('pick-scorer').value.trim() : document.getElementById('pick-champion').value.trim();
       if(!val) return;
-      await mergeAndSave(d => ({...d, specialPicks: {...d.specialPicks, [state.user.name]: {...(d.specialPicks[state.user.name]||{}), [key]: val}}}));
+      await mergeAndSave(d => ({...d, specialPicks: {...d.specialPicks, [state.user.name]: {...(d.specialPicks[state.user.name]||{}), [key]: val}}}), "Typ zapisany ✓");
     });
   });
 
   const setScorer = document.getElementById('set-scorer');
   if(setScorer) setScorer.addEventListener('click', async ()=>{
     const val = document.getElementById('admin-scorer').value.trim();
-    await mergeAndSave(d => ({...d, specialResult: {...d.specialResult, topScorer: val || null}}));
+    await mergeAndSave(d => ({...d, specialResult: {...d.specialResult, topScorer: val || null}}), "Zapisano ✓");
   });
   const setChampion = document.getElementById('set-champion');
   if(setChampion) setChampion.addEventListener('click', async ()=>{
     const val = document.getElementById('admin-champion').value.trim();
-    await mergeAndSave(d => ({...d, specialResult: {...d.specialResult, championTeam: val || null}}));
+    await mergeAndSave(d => ({...d, specialResult: {...d.specialResult, championTeam: val || null}}), "Zapisano ✓");
   });
 }
 
