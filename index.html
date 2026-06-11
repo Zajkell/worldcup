@@ -262,6 +262,33 @@ async function loadData(isBackgroundPoll){
   }
 }
 
+// Fetches the freshest data, applies a mutation function, then writes back.
+// Reduces (but does not fully eliminate) overwrite collisions between concurrent users.
+async function mergeAndSave(mutate){
+  try{
+    const { data: rows, error } = await sb.from('pool_data').select('data').eq('id', 1).single();
+    if(error) throw error;
+    const fresh = rows && rows.data ? rows.data : {};
+    const normalized = {
+      ...DEFAULT_DATA, ...fresh,
+      results: fresh.results || {},
+      bets: { ...PRESET_BETS, ...(fresh.bets || {}) },
+      specialPicks: fresh.specialPicks || {},
+      specialResult: fresh.specialResult || {topScorer:null, championTeam:null},
+      credentials: fresh.credentials || {}
+    };
+    const updated = mutate(normalized);
+    const { error: writeErr } = await sb.from('pool_data').update({ data: updated }).eq('id', 1);
+    if(writeErr) throw writeErr;
+    state.data = updated;
+    state.error = null;
+  } catch(e){
+    console.error(e);
+    state.error = "Nie udało się zapisać zmian. Spróbuj ponownie.";
+  }
+  render();
+}
+
 async function saveData(newData){
   state.data = newData;
   try{
@@ -273,6 +300,38 @@ async function saveData(newData){
     state.error = "Nie udało się zapisać zmian. Spróbuj ponownie.";
   }
   render();
+}
+
+// Registers a new account password safely: fetches the freshest credentials
+// right before writing, to avoid overwriting other players' just-saved passwords.
+async function registerCredential(name, pass){
+  try{
+    const { data: rows, error } = await sb.from('pool_data').select('data').eq('id', 1).single();
+    if(error) throw error;
+    const fresh = rows && rows.data ? rows.data : {};
+    const freshCreds = fresh.credentials || {};
+    if(freshCreds[name]){
+      // Someone already registered this account in the meantime
+      return { ok:false, existing: freshCreds[name] };
+    }
+    const mergedData = {
+      ...DEFAULT_DATA, ...fresh,
+      results: fresh.results || {},
+      bets: { ...PRESET_BETS, ...(fresh.bets || {}) },
+      specialPicks: fresh.specialPicks || {},
+      specialResult: fresh.specialResult || {topScorer:null, championTeam:null},
+      credentials: { ...freshCreds, [name]: pass }
+    };
+    const { error: writeErr } = await sb.from('pool_data').update({ data: mergedData }).eq('id', 1);
+    if(writeErr) throw writeErr;
+    state.data = mergedData;
+    state.error = null;
+    return { ok:true };
+  } catch(e){
+    console.error(e);
+    state.error = "Nie udało się zapisać hasła. Spróbuj ponownie.";
+    return { ok:false, error:true };
+  }
 }
 
 /* ============== RENDEROWANIE ============== */
@@ -637,11 +696,25 @@ function attachHandlers(){
     }
     const creds = state.data.credentials || {};
     if(!creds[name]){
-      const newData = {...state.data, credentials: {...state.data.credentials, [name]: pass}};
-      await saveData(newData);
-      state.user = { name, isAdmin: name === ADMIN };
-      state.view = 'home';
-      render();
+      const result = await registerCredential(name, pass);
+      if(result.ok){
+        state.user = { name, isAdmin: name === ADMIN };
+        state.view = 'home';
+        render();
+      } else if(result.existing){
+        // Someone else registered this account moments ago — check against that
+        if(result.existing === pass){
+          state.user = { name, isAdmin: name === ADMIN };
+          state.view = 'home';
+          render();
+        } else {
+          err.textContent = 'To konto zostało już zarejestrowane z innym hasłem. Spróbuj ponownie.';
+          err.style.display = 'block';
+          render();
+        }
+      } else {
+        render();
+      }
     } else if(creds[name] !== pass){
       err.textContent = 'Nieprawidłowe hasło.';
       err.style.display = 'block';
@@ -668,8 +741,7 @@ function attachHandlers(){
       const h = document.getElementById('bet-home-'+id).value;
       const a = document.getElementById('bet-away-'+id).value;
       if(h==='' || a==='') return;
-      const newData = {...state.data, bets: {...state.data.bets, [state.user.name+"|"+id]: {home:parseInt(h), away:parseInt(a)}}};
-      await saveData(newData);
+      await mergeAndSave(d => ({...d, bets: {...d.bets, [state.user.name+"|"+id]: {home:parseInt(h), away:parseInt(a)}}}));
     });
   });
 
@@ -679,8 +751,7 @@ function attachHandlers(){
       const h = document.getElementById('res-home-'+id).value;
       const a = document.getElementById('res-away-'+id).value;
       if(h==='' || a==='') return;
-      const newData = {...state.data, results: {...state.data.results, [id]: {home:parseInt(h), away:parseInt(a)}}};
-      await saveData(newData);
+      await mergeAndSave(d => ({...d, results: {...d.results, [id]: {home:parseInt(h), away:parseInt(a)}}}));
     });
   });
 
@@ -689,22 +760,19 @@ function attachHandlers(){
       const key = b.dataset.saveSpecial;
       const val = key==='topScorer' ? document.getElementById('pick-scorer').value.trim() : document.getElementById('pick-champion').value.trim();
       if(!val) return;
-      const newData = {...state.data, specialPicks: {...state.data.specialPicks, [state.user.name]: {...(state.data.specialPicks[state.user.name]||{}), [key]: val}}};
-      await saveData(newData);
+      await mergeAndSave(d => ({...d, specialPicks: {...d.specialPicks, [state.user.name]: {...(d.specialPicks[state.user.name]||{}), [key]: val}}}));
     });
   });
 
   const setScorer = document.getElementById('set-scorer');
   if(setScorer) setScorer.addEventListener('click', async ()=>{
     const val = document.getElementById('admin-scorer').value.trim();
-    const newData = {...state.data, specialResult: {...state.data.specialResult, topScorer: val || null}};
-    await saveData(newData);
+    await mergeAndSave(d => ({...d, specialResult: {...d.specialResult, topScorer: val || null}}));
   });
   const setChampion = document.getElementById('set-champion');
   if(setChampion) setChampion.addEventListener('click', async ()=>{
     const val = document.getElementById('admin-champion').value.trim();
-    const newData = {...state.data, specialResult: {...state.data.specialResult, championTeam: val || null}};
-    await saveData(newData);
+    await mergeAndSave(d => ({...d, specialResult: {...d.specialResult, championTeam: val || null}}));
   });
 }
 
