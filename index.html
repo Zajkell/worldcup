@@ -315,6 +315,7 @@ function renderNav(){
       <button class="nav-btn ${v==='special'?'active':''}" data-nav="special">Zakłady specjalne</button>
       ${state.user.isAdmin ? `<button class="nav-btn ${v==='admin'?'active':''}" data-nav="admin">Admin</button>` : ''}
       <span class="user-chip">${state.user.isAdmin ? '👁 Obserwator · ' : '👤 '}${state.user.name}</span>
+      <button class="nav-btn" data-nav="refresh">⟳ Odśwież</button>
       <button class="nav-btn" data-nav="logout">Wyloguj</button>
     </div>
   </nav>`;
@@ -653,6 +654,7 @@ function attachHandlers(){
     b.addEventListener('click', ()=>{
       const v = b.dataset.nav;
       if(v === 'logout'){ state.user = null; state.view='home'; render(); return; }
+      if(v === 'refresh'){ loadData(); return; }
       state.view = v;
       render();
     });
@@ -706,7 +708,6 @@ function attachHandlers(){
 
 /* ============== INICJALIZACJA + AKTUALIZACJE NA ŻYWO ============== */
 loadData();
-setInterval(()=>loadData(true), 5000);
 </script>
 </body>
 </html>
