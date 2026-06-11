@@ -253,8 +253,10 @@ async function loadData(isBackgroundPoll){
     state.error = "Nie udało się połączyć z bazą danych. Sprawdź połączenie.";
   } finally {
     state.loading = false;
-    // Avoid wiping the login form (or other in-progress input) on background polls
-    if(!isBackgroundPoll || state.user){
+    // Avoid wiping in-progress edits: skip re-render if user is focused on a form field
+    const active = document.activeElement;
+    const isEditing = active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
+    if(!isBackgroundPoll || !isEditing){
       render();
     }
   }
@@ -708,6 +710,7 @@ function attachHandlers(){
 
 /* ============== INICJALIZACJA + AKTUALIZACJE NA ŻYWO ============== */
 loadData();
+setInterval(()=>loadData(true), 8000);
 </script>
 </body>
 </html>
