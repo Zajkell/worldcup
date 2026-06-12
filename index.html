@@ -362,14 +362,15 @@ function formComment(name, total, matchesCount){
 
 function renderFormRanking(){
   const N = 5;
+  const playedMatchesCount = FIXTURES.filter(m => state.data.results[m.id]).length;
+  if(playedMatchesCount < N){
+    return `<div class="card">Ranking formy pojawi się po rozegraniu pierwszych ${N} meczów (obecnie: ${playedMatchesCount}).</div>`;
+  }
+
   const rows = PLAYERS.map(p => {
     const form = formForPlayer(p, N);
     return { name: p, ...form };
   }).sort((a,b) => b.total - a.total);
-
-  if(rows.every(r => r.matchesCount === 0)){
-    return '<div class="card">Ranking formy pojawi się po rozegraniu pierwszych meczów.</div>';
-  }
 
   return `
   <div class="form-list">
