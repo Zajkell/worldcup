@@ -173,6 +173,41 @@
   .form-total{ font-family:var(--font-mono); font-weight:800; font-size:1rem; color:var(--gold); flex-shrink:0; }
   .form-total-label{ font-family:var(--font-body); font-weight:500; font-size:0.7rem; color:var(--text-dim); }
   .form-comment{ font-size:0.85rem; color:var(--text-dim); flex-basis:100%; font-style:italic; }
+
+  /* FIFA-style player cards */
+  .fifa-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:16px; }
+  .fifa-card{
+    position:relative; border-radius:16px; padding:14px 12px 16px;
+    aspect-ratio: 3/4; display:flex; flex-direction:column; align-items:center;
+    color:#1a1405; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.35);
+    border:1px solid rgba(255,255,255,0.25);
+  }
+  .fifa-bronze{ background:linear-gradient(155deg, #d8b48a 0%, #a9744f 55%, #8a5a3a 100%); }
+  .fifa-silver{ background:linear-gradient(155deg, #f1f3f5 0%, #c4cdd4 55%, #9aa6b0 100%); }
+  .fifa-gold{ background:linear-gradient(155deg, #fff0b3 0%, #f5c542 55%, #d99a1e 100%); }
+  .fifa-tots{ background:linear-gradient(155deg, #ffe9fb 0%, #f06bd6 45%, #6b3df0 100%); color:#fff; }
+  .fifa-tots .fifa-stat-lbl, .fifa-tots .fifa-pos, .fifa-tots .fifa-name{ color:#fff; }
+  .fifa-tier-badge{
+    position:absolute; top:8px; right:8px; font-size:0.6rem; font-weight:800;
+    letter-spacing:1px; padding:3px 8px; border-radius:999px; background:rgba(255,255,255,0.35);
+    text-transform:uppercase;
+  }
+  .fifa-top{ display:flex; flex-direction:column; align-items:center; margin-top:4px; }
+  .fifa-ovr{ font-family:var(--font-display); font-size:2.4rem; line-height:1; letter-spacing:1px; }
+  .fifa-pos{ font-family:var(--font-display); font-size:0.95rem; letter-spacing:2px; margin-top:2px; opacity:0.85; }
+  .fifa-avatar{
+    width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,0.35);
+    display:flex; align-items:center; justify-content:center; font-size:1.8rem;
+    margin:10px 0 8px; border:2px solid rgba(255,255,255,0.5);
+  }
+  .fifa-name{
+    font-family:var(--font-display); font-size:1rem; letter-spacing:1px; text-transform:uppercase;
+    text-align:center; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+  }
+  .fifa-stats{ display:flex; gap:14px; margin-top:auto; }
+  .fifa-stat{ display:flex; flex-direction:column; align-items:center; }
+  .fifa-stat-val{ font-family:var(--font-mono); font-weight:800; font-size:1.1rem; }
+  .fifa-stat-lbl{ font-size:0.62rem; font-weight:700; letter-spacing:1px; opacity:0.75; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -360,6 +395,63 @@ function formComment(name, total, matchesCount){
   return "🧳 Chłopie, pakuj walizę";
 }
 
+// Computes FIFA-style card stats (1-99 scale) for a player based on their betting history.
+function playerCardStats(p){
+  const data = state.data;
+  const played = FIXTURES.filter(m => data.results[m.id] && data.bets[p+"|"+m.id]);
+  const playedCount = played.length;
+
+  // CEL (celność): % of played matches where the player hit the exact score (3pts)
+  let cel = 50; // neutral default before any matches
+  if(playedCount > 0){
+    const exactHits = played.filter(m => calcPoints(data.bets[p+"|"+m.id], data.results[m.id]) === 3).length;
+    const pct = exactHits / playedCount; // 0..1
+    cel = Math.round(40 + pct * 59); // 40-99 range
+  }
+
+  // FOR (forma): points from last 5 played matches, scaled 0-15 -> 40-99
+  const form = formForPlayer(p, 5);
+  let forStat = 50;
+  if(form.matchesCount > 0){
+    forStat = Math.round(40 + (form.total / 15) * 59);
+  }
+
+  // ODW (odwaga): average total goals (home+away) in the player's bets, scaled
+  let odw = 50;
+  const allBetsForPlayer = FIXTURES
+    .map(m => data.bets[p+"|"+m.id])
+    .filter(b => b);
+  if(allBetsForPlayer.length > 0){
+    const avgGoals = allBetsForPlayer.reduce((sum,b) => sum + b.home + b.away, 0) / allBetsForPlayer.length;
+    // avg 1 goal -> ~40, avg 3 goals -> ~70, avg 5+ goals -> ~99
+    odw = Math.round(Math.min(99, Math.max(40, 30 + avgGoals * 14)));
+  }
+
+  // OVR: weighted blend of the three stats, nudged by overall tournament points
+  const totals = totalsForPlayer(p);
+  const maxPossiblePts = Math.max(1, playedCount * 3 + 10); // rough ceiling incl. special bets
+  const ptsBonus = Math.min(10, Math.round((totals.pts / maxPossiblePts) * 10));
+  let ovr = Math.round((cel * 0.4 + forStat * 0.35 + odw * 0.25));
+  ovr = Math.min(99, Math.max(40, ovr + ptsBonus - 5));
+
+  // Card tier based on OVR
+  let tier;
+  if(ovr >= 85) tier = 'tots';
+  else if(ovr >= 75) tier = 'gold';
+  else if(ovr >= 65) tier = 'silver';
+  else tier = 'bronze';
+
+  // Playful "position" label based on dominant trait
+  let position;
+  const maxStat = Math.max(cel, forStat, odw);
+  if(maxStat === odw && odw >= 70) position = 'OPT'; // Optymista
+  else if(maxStat === cel && cel >= 70) position = 'WYR'; // Wyrocznia
+  else if(maxStat === forStat && forStat >= 70) position = 'FOR'; // W formie
+  else position = 'GRA'; // Gracz (neutral)
+
+  return { ovr, cel, for: forStat, odw, tier, position, playedCount };
+}
+
 function renderFormRanking(){
   const N = 5;
   const playedMatchesCount = FIXTURES.filter(m => state.data.results[m.id]).length;
@@ -386,6 +478,38 @@ function renderFormRanking(){
       </div>`).join('')}
   </div>`;
 }
+
+const TIER_LABELS = {
+  tots: 'TOTS',
+  gold: 'ZŁOTO',
+  silver: 'SREBRO',
+  bronze: 'BRĄZ'
+};
+
+function renderPlayerCards(){
+  const rows = PLAYERS.map(p => ({ name: p, ...playerCardStats(p) }))
+    .sort((a,b) => b.ovr - a.ovr);
+
+  return `
+  <div class="fifa-grid">
+    ${rows.map(r => `
+      <div class="fifa-card fifa-${r.tier}">
+        <div class="fifa-tier-badge">${TIER_LABELS[r.tier]}</div>
+        <div class="fifa-top">
+          <div class="fifa-ovr">${r.ovr}</div>
+          <div class="fifa-pos">${r.position}</div>
+        </div>
+        <div class="fifa-avatar">⚽</div>
+        <div class="fifa-name">${r.name}</div>
+        <div class="fifa-stats">
+          <div class="fifa-stat"><span class="fifa-stat-val">${r.cel}</span><span class="fifa-stat-lbl">CEL</span></div>
+          <div class="fifa-stat"><span class="fifa-stat-val">${r.for}</span><span class="fifa-stat-lbl">FOR</span></div>
+          <div class="fifa-stat"><span class="fifa-stat-val">${r.odw}</span><span class="fifa-stat-lbl">ODW</span></div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
 
 /* ============== SUPABASE I/O ============== */
 async function loadData(isBackgroundPoll){
@@ -909,6 +1033,13 @@ function renderLeaderboard(){
         <div class="section-sub">Punkty z ostatnich 5 rozegranych meczów</div>
       </div>
       ${renderFormRanking()}
+    </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Karty <span class="gold">graczy</span></h2>
+        <div class="section-sub">CEL = celność typów, FOR = forma, ODW = odwaga (średnia goli w typach)</div>
+      </div>
+      ${renderPlayerCards()}
     </div>
     <div class="section">
       <div class="section-head">
