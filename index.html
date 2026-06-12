@@ -325,26 +325,31 @@ async function loadData(isBackgroundPoll){
     state.error = "Nie udało się połączyć z bazą danych. Sprawdź połączenie.";
   } finally {
     state.loading = false;
-    // Preserve the currently focused input's value/selection across re-render,
-    // so background polling doesn't disrupt in-progress typing.
-    const active = document.activeElement;
-    let focusInfo = null;
-    if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA') && active.id){
-      focusInfo = {
-        id: active.id,
-        value: active.value,
-        selStart: active.selectionStart,
-        selEnd: active.selectionEnd
-      };
-    }
-    render();
-    if(focusInfo){
-      const el = document.getElementById(focusInfo.id);
-      if(el){
-        el.value = focusInfo.value;
-        el.focus();
-        if(typeof focusInfo.selStart === 'number' && el.setSelectionRange){
-          try{ el.setSelectionRange(focusInfo.selStart, focusInfo.selEnd); }catch(e){}
+    // While on the login screen, background polls have nothing useful to update
+    // and risk disrupting the form — skip re-render entirely in that case.
+    if(!(isBackgroundPoll && !state.user)){
+      // Preserve the currently focused input's value/selection across re-render,
+      // so background polling doesn't disrupt in-progress typing.
+      const active = document.activeElement;
+      let focusInfo = null;
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA') && active.id){
+        focusInfo = { id: active.id, value: active.value, selStart: null, selEnd: null };
+        try{
+          if(active.tagName !== 'SELECT' && typeof active.selectionStart === 'number'){
+            focusInfo.selStart = active.selectionStart;
+            focusInfo.selEnd = active.selectionEnd;
+          }
+        }catch(e){ /* some input types (e.g. password in some browsers) don't support selection */ }
+      }
+      render();
+      if(focusInfo){
+        const el = document.getElementById(focusInfo.id);
+        if(el){
+          el.value = focusInfo.value;
+          el.focus();
+          if(focusInfo.selStart !== null && el.setSelectionRange){
+            try{ el.setSelectionRange(focusInfo.selStart, focusInfo.selEnd); }catch(e){}
+          }
         }
       }
     }
