@@ -174,72 +174,14 @@
   .form-total-label{ font-family:var(--font-body); font-weight:500; font-size:0.7rem; color:var(--text-dim); }
   .form-comment{ font-size:0.85rem; color:var(--text-dim); flex-basis:100%; font-style:italic; }
 
-  /* FIFA-style player cards */
-  .fifa-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:20px; }
-  .fifa-card{
-    position:relative; padding:0;
-    aspect-ratio: 3/4.2; display:flex; flex-direction:column; align-items:center;
-    color:#3a2a12; overflow:hidden; box-shadow:0 12px 28px rgba(0,0,0,0.45);
-    border-radius: 14px 14px 50% 50% / 14px 14px 22px 22px;
-    border:2px solid rgba(255,255,255,0.5);
+  /* FUT-style player cards (SVG-based) */
+  .fifa-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:18px; }
+  .fut-card-wrap{
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.45));
+    transition: transform .2s ease;
   }
-  .fifa-zone-top{
-    position:relative; width:100%; flex:1.15; display:flex; flex-direction:column; align-items:center;
-    padding-top:14px; overflow:hidden;
-  }
-  .fifa-zone-top::before{
-    /* Diamond/facet pattern background, like FUT cards */
-    content:''; position:absolute; inset:0; pointer-events:none; opacity:0.55;
-    background-image:
-      repeating-linear-gradient(115deg, rgba(255,255,255,0.22) 0 2px, transparent 2px 34px),
-      repeating-linear-gradient(25deg, rgba(255,255,255,0.14) 0 1px, transparent 1px 22px);
-  }
-  .fifa-zone-bottom{
-    position:relative; width:100%; flex:0.85; display:flex; flex-direction:column; align-items:center;
-    padding:6px 8px 10px; border-top:1px solid rgba(0,0,0,0.15);
-  }
-  .fifa-bronze .fifa-zone-top{ background:linear-gradient(160deg, #e6c49d 0%, #c08c5e 60%, #9c6a40 100%); }
-  .fifa-bronze .fifa-zone-bottom{ background:linear-gradient(160deg, #f3ddc4 0%, #d9b690 100%); }
-  .fifa-silver .fifa-zone-top{ background:linear-gradient(160deg, #ffffff 0%, #c9d2da 60%, #9aa6b3 100%); }
-  .fifa-silver .fifa-zone-bottom{ background:linear-gradient(160deg, #f4f7f9 0%, #d6dde3 100%); }
-  .fifa-gold .fifa-zone-top{ background:linear-gradient(160deg, #fff6d6 0%, #f6cf52 60%, #d99a1e 100%); }
-  .fifa-gold .fifa-zone-bottom{ background:linear-gradient(160deg, #fff3c4 0%, #f3d27a 100%); }
-  .fifa-tots .fifa-zone-top{ background:linear-gradient(160deg, #4527a8 0%, #9b3fe0 60%, #f06bd6 100%); }
-  .fifa-tots .fifa-zone-bottom{ background:linear-gradient(160deg, #2a1f5c 0%, #4527a8 100%); color:#fff; }
-  .fifa-tots{ color:#fff; }
-  .fifa-tots .fifa-stat-lbl, .fifa-tots .fifa-pos, .fifa-tots .fifa-name, .fifa-tots .fifa-footer{ color:#fff; }
-  .fifa-tier-badge{
-    position:absolute; top:10px; right:10px; font-family:'Barlow Condensed',sans-serif; font-size:0.6rem; font-weight:800;
-    letter-spacing:1.5px; padding:3px 9px; border-radius:999px; background:rgba(255,255,255,0.45);
-    text-transform:uppercase; z-index:2;
-  }
-  .fifa-top{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
-  .fifa-ovr{ font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:2.6rem; line-height:0.95; letter-spacing:-1px; }
-  .fifa-pos{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.95rem; letter-spacing:3px; margin-top:2px; opacity:0.85; }
-  .fifa-avatar{
-    position:relative; z-index:1; width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.4);
-    display:flex; align-items:center; justify-content:center; font-size:1.6rem;
-    margin-top:8px; border:2px solid rgba(255,255,255,0.55);
-    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.15);
-  }
-  .fifa-name{
-    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.95rem; letter-spacing:2px; text-transform:uppercase;
-    text-align:center; margin:6px 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    max-width:100%; padding:0 4px;
-  }
-  .fifa-name-long{ font-size:0.78rem; letter-spacing:1px; }
-  .fifa-stats{ display:flex; gap:14px; margin-top:auto; margin-bottom:4px; }
-  .fifa-stat{ display:flex; flex-direction:column; align-items:center; }
-  .fifa-stat-val{ font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1.2rem; line-height:1; }
-  .fifa-stat-lbl{ font-family:'Barlow Condensed',sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:2px; opacity:0.7; margin-top:2px; }
-  .fifa-footer{
-    font-family:'Barlow Condensed',sans-serif;
-    font-size:0.55rem; font-weight:700; letter-spacing:3px; opacity:0.5; text-transform:uppercase;
-  }
-  .fifa-footer{
-    position:relative; z-index:1; margin-top:8px; font-family:'Barlow Condensed',sans-serif;
-    font-size:0.55rem; font-weight:700; letter-spacing:3px; opacity:0.55; text-transform:uppercase;
-  }
+  .fut-card-wrap:hover{ transform: translateY(-4px); }
+  .fut-card-svg{ width:100%; display:block; }
 </style>
 </head>
 <body>
@@ -518,32 +460,67 @@ const TIER_LABELS = {
   bronze: 'BRĄZ'
 };
 
+// Gradient stop colors per tier, used in the SVG card background
+const TIER_COLORS = {
+  bronze: { from:'#e6c49d', via:'#bf8a5c', to:'#7a4f2c', facet:'#fff3e0', text:'#3a2410', frame:'#8a5a32' },
+  silver: { from:'#ffffff', via:'#cdd6dd', to:'#8d99a6', facet:'#ffffff', text:'#2a3138', frame:'#aab4bd' },
+  gold:   { from:'#fff6cf', via:'#f6cf52', to:'#c9911e', facet:'#fffbe0', text:'#4a3300', frame:'#e0a82a' },
+  tots:   { from:'#7a4ce0', via:'#c64ce0', to:'#f06bd6', facet:'#ffffff', text:'#ffffff', frame:'#f5c542' }
+};
+
+// FUT-style shield path (viewBox 0 0 200 280)
+const FUT_SHIELD_PATH = "M14,22 C14,9 24,3 42,3 L158,3 C176,3 186,9 186,22 L186,205 C186,222 178,234 162,241 L100,275 L38,241 C22,234 14,222 14,205 Z";
+
+// Generates a single FUT-style player card as an inline SVG
+function renderFutCard(r){
+  const c = TIER_COLORS[r.tier];
+  const uid = 'card_' + r.name.replace(/[^a-zA-Z0-9]/g, '');
+  const nameSize = r.name.length > 9 ? 15 : 18;
+  return `
+  <svg viewBox="0 0 200 280" class="fut-card-svg" role="img" aria-label="Karta gracza ${r.name}, ${r.ovr} OVR">
+    <defs>
+      <linearGradient id="bg-${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${c.from}"/>
+        <stop offset="50%" stop-color="${c.via}"/>
+        <stop offset="100%" stop-color="${c.to}"/>
+      </linearGradient>
+      <clipPath id="clip-${uid}">
+        <path d="${FUT_SHIELD_PATH}"/>
+      </clipPath>
+    </defs>
+    <path d="${FUT_SHIELD_PATH}" fill="url(#bg-${uid})" stroke="${c.frame}" stroke-width="3"/>
+    <g clip-path="url(#clip-${uid})" opacity="0.16">
+      <polygon points="20,20 110,5 90,80" fill="${c.facet}"/>
+      <polygon points="100,5 186,30 140,110 90,80" fill="${c.facet}" opacity="0.6"/>
+      <polygon points="14,120 90,80 140,110 80,200 14,205" fill="${c.facet}" opacity="0.4"/>
+      <polygon points="140,110 186,30 186,150 100,180" fill="${c.facet}" opacity="0.7"/>
+      <polygon points="80,200 100,180 186,150 186,205 100,275 38,241" fill="${c.facet}" opacity="0.3"/>
+    </g>
+    <path d="${FUT_SHIELD_PATH}" fill="none" stroke="${c.frame}" stroke-width="1" opacity="0.6"/>
+    <text x="38" y="48" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="900" font-size="40" fill="${c.text}">${r.ovr}</text>
+    <text x="38" y="68" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="15" letter-spacing="2" fill="${c.text}" opacity="0.85">${r.position}</text>
+    <text x="186" y="20" text-anchor="end" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="11" letter-spacing="1.5" fill="${c.text}" opacity="0.7">${TIER_LABELS[r.tier]}</text>
+    <circle cx="100" cy="125" r="42" fill="${c.facet}" opacity="0.35" stroke="${c.frame}" stroke-width="1.5"/>
+    <text x="100" y="140" text-anchor="middle" font-size="34">⚽</text>
+    <line x1="30" y1="183" x2="170" y2="183" stroke="${c.frame}" stroke-width="1" opacity="0.5"/>
+    <text x="100" y="205" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="${nameSize}" letter-spacing="2" fill="${c.text}">${r.name.toUpperCase()}</text>
+    <text x="50" y="238" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="22" fill="${c.text}">${r.cel}</text>
+    <text x="50" y="252" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="10" letter-spacing="2" fill="${c.text}" opacity="0.7">CEL</text>
+    <text x="100" y="238" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="22" fill="${c.text}">${r.for}</text>
+    <text x="100" y="252" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="10" letter-spacing="2" fill="${c.text}" opacity="0.7">FOR</text>
+    <text x="150" y="238" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="22" fill="${c.text}">${r.odw}</text>
+    <text x="150" y="252" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="10" letter-spacing="2" fill="${c.text}" opacity="0.7">ODW</text>
+    <text x="100" y="267" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="8" letter-spacing="3" fill="${c.text}" opacity="0.5">MUNDIAL CARDS</text>
+  </svg>`;
+}
+
 function renderPlayerCards(){
   const rows = PLAYERS.map(p => ({ name: p, ...playerCardStats(p) }))
     .sort((a,b) => b.ovr - a.ovr);
 
   return `
   <div class="fifa-grid">
-    ${rows.map(r => `
-      <div class="fifa-card fifa-${r.tier}">
-        <div class="fifa-zone-top">
-          <div class="fifa-tier-badge">${TIER_LABELS[r.tier]}</div>
-          <div class="fifa-top">
-            <div class="fifa-ovr">${r.ovr}</div>
-            <div class="fifa-pos">${r.position}</div>
-          </div>
-          <div class="fifa-avatar">⚽</div>
-        </div>
-        <div class="fifa-zone-bottom">
-          <div class="fifa-name ${r.name.length > 8 ? 'fifa-name-long' : ''}">${r.name}</div>
-          <div class="fifa-stats">
-            <div class="fifa-stat"><span class="fifa-stat-val">${r.cel}</span><span class="fifa-stat-lbl">CEL</span></div>
-            <div class="fifa-stat"><span class="fifa-stat-val">${r.for}</span><span class="fifa-stat-lbl">FOR</span></div>
-            <div class="fifa-stat"><span class="fifa-stat-val">${r.odw}</span><span class="fifa-stat-lbl">ODW</span></div>
-          </div>
-          <div class="fifa-footer">Mundial Cards</div>
-        </div>
-      </div>`).join('')}
+    ${rows.map(r => `<div class="fut-card-wrap">${renderFutCard(r)}</div>`).join('')}
   </div>`;
 }
 
