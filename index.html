@@ -177,65 +177,65 @@
   /* FIFA-style player cards */
   .fifa-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:20px; }
   .fifa-card{
-    position:relative; padding:18px 10px 10px;
+    position:relative; padding:0;
     aspect-ratio: 3/4.2; display:flex; flex-direction:column; align-items:center;
-    color:#1a1405; overflow:hidden; box-shadow:0 12px 28px rgba(0,0,0,0.45);
-    clip-path: polygon(
-      8% 0%, 30% 0%, 38% 4%, 62% 4%, 70% 0%, 92% 0%,
-      100% 8%, 100% 88%, 50% 100%, 0% 88%, 0% 8%
-    );
+    color:#3a2a12; overflow:hidden; box-shadow:0 12px 28px rgba(0,0,0,0.45);
+    border-radius: 14px 14px 50% 50% / 14px 14px 22px 22px;
+    border:2px solid rgba(255,255,255,0.5);
   }
-  .fifa-card::before{
-    /* Inner frame line */
-    content:''; position:absolute; inset:5px; pointer-events:none;
-    border:1px solid rgba(255,255,255,0.35);
-    clip-path: polygon(
-      8% 0%, 30% 0%, 38% 4%, 62% 4%, 70% 0%, 92% 0%,
-      100% 8%, 100% 88%, 50% 100%, 0% 88%, 0% 8%
-    );
+  .fifa-zone-top{
+    position:relative; width:100%; flex:1.15; display:flex; flex-direction:column; align-items:center;
+    padding-top:14px; overflow:hidden;
   }
-  .fifa-card::after{
+  .fifa-zone-top::before{
     /* Diamond/facet pattern background, like FUT cards */
-    content:''; position:absolute; inset:0; pointer-events:none; opacity:0.5;
+    content:''; position:absolute; inset:0; pointer-events:none; opacity:0.55;
     background-image:
-      repeating-linear-gradient(115deg, rgba(255,255,255,0.18) 0 2px, transparent 2px 38px),
-      repeating-linear-gradient(25deg, rgba(255,255,255,0.12) 0 1px, transparent 1px 26px);
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.22) 0 2px, transparent 2px 34px),
+      repeating-linear-gradient(25deg, rgba(255,255,255,0.14) 0 1px, transparent 1px 22px);
   }
-  .fifa-bronze{ background:linear-gradient(160deg, #e0bd96 0%, #b9825a 40%, #8a5a3a 75%, #6e4628 100%); }
-  .fifa-silver{ background:linear-gradient(160deg, #fdfeff 0%, #d4dbe1 40%, #a3aebb 75%, #828d99 100%); }
-  .fifa-gold{ background:linear-gradient(160deg, #fff4cc 0%, #f7cf52 40%, #e0a82a 75%, #b9821a 100%); }
-  .fifa-tots{ background:linear-gradient(160deg, #2a1f5c 0%, #6b3df0 40%, #c64ce0 75%, #f06bd6 100%); color:#fff; }
-  .fifa-tots .fifa-stat-lbl, .fifa-tots .fifa-pos, .fifa-tots .fifa-name, .fifa-tots .fifa-divider, .fifa-tots .fifa-footer{ color:#fff; border-color:rgba(255,255,255,0.4); }
-  .fifa-tots::after{ opacity:0.7; mix-blend-mode:overlay; }
+  .fifa-zone-bottom{
+    position:relative; width:100%; flex:0.85; display:flex; flex-direction:column; align-items:center;
+    padding:6px 8px 10px; border-top:1px solid rgba(0,0,0,0.15);
+  }
+  .fifa-bronze .fifa-zone-top{ background:linear-gradient(160deg, #e6c49d 0%, #c08c5e 60%, #9c6a40 100%); }
+  .fifa-bronze .fifa-zone-bottom{ background:linear-gradient(160deg, #f3ddc4 0%, #d9b690 100%); }
+  .fifa-silver .fifa-zone-top{ background:linear-gradient(160deg, #ffffff 0%, #c9d2da 60%, #9aa6b3 100%); }
+  .fifa-silver .fifa-zone-bottom{ background:linear-gradient(160deg, #f4f7f9 0%, #d6dde3 100%); }
+  .fifa-gold .fifa-zone-top{ background:linear-gradient(160deg, #fff6d6 0%, #f6cf52 60%, #d99a1e 100%); }
+  .fifa-gold .fifa-zone-bottom{ background:linear-gradient(160deg, #fff3c4 0%, #f3d27a 100%); }
+  .fifa-tots .fifa-zone-top{ background:linear-gradient(160deg, #4527a8 0%, #9b3fe0 60%, #f06bd6 100%); }
+  .fifa-tots .fifa-zone-bottom{ background:linear-gradient(160deg, #2a1f5c 0%, #4527a8 100%); color:#fff; }
+  .fifa-tots{ color:#fff; }
+  .fifa-tots .fifa-stat-lbl, .fifa-tots .fifa-pos, .fifa-tots .fifa-name, .fifa-tots .fifa-footer{ color:#fff; }
   .fifa-tier-badge{
-    position:absolute; top:10px; right:14px; font-family:'Barlow Condensed',sans-serif; font-size:0.6rem; font-weight:800;
+    position:absolute; top:10px; right:10px; font-family:'Barlow Condensed',sans-serif; font-size:0.6rem; font-weight:800;
     letter-spacing:1.5px; padding:3px 9px; border-radius:999px; background:rgba(255,255,255,0.45);
     text-transform:uppercase; z-index:2;
   }
-  .fifa-top{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; margin-top:6px; }
+  .fifa-top{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
   .fifa-ovr{ font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:2.6rem; line-height:0.95; letter-spacing:-1px; }
   .fifa-pos{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.95rem; letter-spacing:3px; margin-top:2px; opacity:0.85; }
   .fifa-avatar{
-    position:relative; z-index:1; width:58px; height:58px; border-radius:50%; background:rgba(255,255,255,0.4);
-    display:flex; align-items:center; justify-content:center; font-size:1.7rem;
-    margin:8px 0 6px; border:2px solid rgba(255,255,255,0.55);
+    position:relative; z-index:1; width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.4);
+    display:flex; align-items:center; justify-content:center; font-size:1.6rem;
+    margin-top:8px; border:2px solid rgba(255,255,255,0.55);
     box-shadow: inset 0 0 0 3px rgba(255,255,255,0.15);
   }
   .fifa-name{
-    position:relative; z-index:1;
     font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.95rem; letter-spacing:2px; text-transform:uppercase;
-    text-align:center; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    text-align:center; margin:6px 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     max-width:100%; padding:0 4px;
   }
   .fifa-name-long{ font-size:0.78rem; letter-spacing:1px; }
-  .fifa-divider{
-    position:relative; z-index:1;
-    width:72%; height:1px; background:rgba(0,0,0,0.18); margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.3);
-  }
-  .fifa-stats{ position:relative; z-index:1; display:flex; gap:14px; margin-top:auto; }
+  .fifa-stats{ display:flex; gap:14px; margin-top:auto; margin-bottom:4px; }
   .fifa-stat{ display:flex; flex-direction:column; align-items:center; }
   .fifa-stat-val{ font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1.2rem; line-height:1; }
-  .fifa-stat-lbl{ font-family:'Barlow Condensed',sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:2px; opacity:0.75; margin-top:2px; }
+  .fifa-stat-lbl{ font-family:'Barlow Condensed',sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:2px; opacity:0.7; margin-top:2px; }
+  .fifa-footer{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:0.55rem; font-weight:700; letter-spacing:3px; opacity:0.5; text-transform:uppercase;
+  }
   .fifa-footer{
     position:relative; z-index:1; margin-top:8px; font-family:'Barlow Condensed',sans-serif;
     font-size:0.55rem; font-weight:700; letter-spacing:3px; opacity:0.55; text-transform:uppercase;
@@ -526,20 +526,23 @@ function renderPlayerCards(){
   <div class="fifa-grid">
     ${rows.map(r => `
       <div class="fifa-card fifa-${r.tier}">
-        <div class="fifa-tier-badge">${TIER_LABELS[r.tier]}</div>
-        <div class="fifa-top">
-          <div class="fifa-ovr">${r.ovr}</div>
-          <div class="fifa-pos">${r.position}</div>
+        <div class="fifa-zone-top">
+          <div class="fifa-tier-badge">${TIER_LABELS[r.tier]}</div>
+          <div class="fifa-top">
+            <div class="fifa-ovr">${r.ovr}</div>
+            <div class="fifa-pos">${r.position}</div>
+          </div>
+          <div class="fifa-avatar">⚽</div>
         </div>
-        <div class="fifa-avatar">⚽</div>
-        <div class="fifa-name ${r.name.length > 8 ? 'fifa-name-long' : ''}">${r.name}</div>
-        <div class="fifa-divider"></div>
-        <div class="fifa-stats">
-          <div class="fifa-stat"><span class="fifa-stat-val">${r.cel}</span><span class="fifa-stat-lbl">CEL</span></div>
-          <div class="fifa-stat"><span class="fifa-stat-val">${r.for}</span><span class="fifa-stat-lbl">FOR</span></div>
-          <div class="fifa-stat"><span class="fifa-stat-val">${r.odw}</span><span class="fifa-stat-lbl">ODW</span></div>
+        <div class="fifa-zone-bottom">
+          <div class="fifa-name ${r.name.length > 8 ? 'fifa-name-long' : ''}">${r.name}</div>
+          <div class="fifa-stats">
+            <div class="fifa-stat"><span class="fifa-stat-val">${r.cel}</span><span class="fifa-stat-lbl">CEL</span></div>
+            <div class="fifa-stat"><span class="fifa-stat-val">${r.for}</span><span class="fifa-stat-lbl">FOR</span></div>
+            <div class="fifa-stat"><span class="fifa-stat-val">${r.odw}</span><span class="fifa-stat-lbl">ODW</span></div>
+          </div>
+          <div class="fifa-footer">Mundial Cards</div>
         </div>
-        <div class="fifa-footer">Mundial Cards</div>
       </div>`).join('')}
   </div>`;
 }
