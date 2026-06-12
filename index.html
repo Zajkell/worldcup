@@ -131,6 +131,13 @@
   .loading{text-align:center; padding:80px 20px; color:var(--text-dim);}
   .err-banner{background:rgba(217,83,79,0.1); border:1px solid var(--red); color:var(--red); padding:12px 18px; border-radius:10px; margin-bottom:18px; font-size:0.85rem;}
   .success-banner{background:rgba(46,168,97,0.12); border:1px solid var(--green-bright); color:var(--green-bright); padding:12px 18px; border-radius:10px; margin-bottom:18px; font-size:0.85rem; font-weight:700;}
+  .bets-overview th, .bets-overview td{ text-align:center; font-size:0.8rem; padding:8px 10px; white-space:nowrap; }
+  .bets-overview th:first-child, .bets-overview td:first-child{ text-align:left; }
+  .bet-cell{ font-family:var(--font-mono); font-weight:800; }
+  .bet-3{ background:rgba(46,168,97,0.22); color:var(--green-bright); }
+  .bet-1{ background:rgba(91,156,245,0.18); color:#7ab3ff; }
+  .bet-0{ background:rgba(217,83,79,0.15); color:var(--red); }
+  .bet-none{ color:var(--text-dim); }
 </style>
 </head>
 <body>
@@ -144,7 +151,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_I0k6muP4QpIPKStOukfAWA_-wyPocWr";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ============== DANE STAŁE ============== */
-const PLAYERS = ["Kachel","Ssaku","Włodi","Gercu","Shakur","Pędzel","Bonsu","Kaczor","Rejbik"];
+const PLAYERS = ["Kachel","Ssaku","Włodi","Szyna","Shakur","Pędzel","Bonsu","Kaczor","Rejbik"];
 const ADMIN = "Admin";
 const SPECIAL_DEADLINE = new Date("2026-06-12T23:59:59Z");
 
@@ -226,7 +233,7 @@ const FIXTURES = [
 const PRESET_BETS = {
   "Ssaku|m1": {home:3, away:0},
   "Włodi|m1": {home:2, away:1},
-  "Gercu|m1": {home:2, away:0},
+  "Szyna|m1": {home:2, away:0},
   "Shakur|m1": {home:3, away:0},
   "Kachel|m1": {home:4, away:2},
   "Pędzel|m1": {home:2, away:1},
@@ -318,11 +325,28 @@ async function loadData(isBackgroundPoll){
     state.error = "Nie udało się połączyć z bazą danych. Sprawdź połączenie.";
   } finally {
     state.loading = false;
-    // Avoid wiping in-progress edits: skip re-render if user is focused on a form field
+    // Preserve the currently focused input's value/selection across re-render,
+    // so background polling doesn't disrupt in-progress typing.
     const active = document.activeElement;
-    const isEditing = active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
-    if(!isBackgroundPoll || !isEditing){
-      render();
+    let focusInfo = null;
+    if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA') && active.id){
+      focusInfo = {
+        id: active.id,
+        value: active.value,
+        selStart: active.selectionStart,
+        selEnd: active.selectionEnd
+      };
+    }
+    render();
+    if(focusInfo){
+      const el = document.getElementById(focusInfo.id);
+      if(el){
+        el.value = focusInfo.value;
+        el.focus();
+        if(typeof focusInfo.selStart === 'number' && el.setSelectionRange){
+          try{ el.setSelectionRange(focusInfo.selStart, focusInfo.selEnd); }catch(e){}
+        }
+      }
     }
   }
 }
@@ -648,7 +672,50 @@ function renderLeaderboard(){
         }).join('')}
       </div>
     </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Zakłady <span class="gold">graczy</span></h2>
+        <div class="section-sub">Zielony = 3 pkt (dokładny wynik), niebieski = 1 pkt (trafiony zwycięzca), czerwony = 0 pkt</div>
+      </div>
+      ${renderBetsOverview()}
+    </div>
   </main>`;
+}
+
+function renderBetsOverview(){
+  const data = state.data;
+  const played = FIXTURES.filter(m=>data.results[m.id]);
+  if(played.length === 0){
+    return '<div class="card">Żaden mecz jeszcze się nie zakończył.</div>';
+  }
+  return `
+  <div class="card" style="padding:0; overflow-x:auto;">
+    <table class="leader-table bets-overview">
+      <thead>
+        <tr>
+          <th>Mecz</th><th>Wynik</th>
+          ${PLAYERS.map(p=>`<th>${p}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${played.map(m=>{
+          const result = data.results[m.id];
+          return `
+          <tr>
+            <td style="white-space:nowrap;">${m.home} - ${m.away}</td>
+            <td class="pts-cell">${result.home}:${result.away}</td>
+            ${PLAYERS.map(p=>{
+              const bet = data.bets[p+"|"+m.id];
+              if(!bet) return `<td class="bet-cell bet-none">—</td>`;
+              const pts = calcPoints(bet, result);
+              const cls = pts===3 ? 'bet-3' : pts===1 ? 'bet-1' : 'bet-0';
+              return `<td class="bet-cell ${cls}">${bet.home}:${bet.away}</td>`;
+            }).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
 }
 
 function renderSpecial(){
