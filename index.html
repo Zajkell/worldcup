@@ -186,7 +186,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_I0k6muP4QpIPKStOukfAWA_-wyPocWr";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ============== DANE STAŁE ============== */
-const PLAYERS = ["Kachel","Ssaku","Włodi","Szyna","Shakur","Pędzel","Bonsu","Kaczor","Rejbik","Szef Bartek"];
+const PLAYERS = ["Kachel","Ssaku","Włodi","Szyna","Shakur","Pędzel","Bonsu","Kaczor","Rejbik","Szef Bartek","Rachon"];
 const ADMIN = "Admin";
 const SPECIAL_DEADLINE = new Date("2026-06-12T23:59:59Z");
 
@@ -717,7 +717,7 @@ function renderLogin(){
     <div class="hero">
       <div class="badge">🏆 World Cup 2026</div>
       <h1>Przewiduj. Rywalizuj.<span class="gold-line">Zdobądź chwałę.</span></h1>
-      <p>Wspólna pula zakładów na Mistrzostwa Świata 2026. 10 graczy, każdy mecz, jeden mistrz. Obstawiaj wyniki, śledź tabelę i pokaż, że znasz się na piłce najlepiej.</p>
+      <p>Wspólna pula zakładów na Mistrzostwa Świata 2026. 11 graczy, każdy mecz, jeden mistrz. Obstawiaj wyniki, śledź tabelę i pokaż, że znasz się na piłce najlepiej.</p>
     </div>
     <div class="login-wrap">
       <div class="card">
@@ -753,11 +753,11 @@ function renderHome(){
     <div class="hero">
       <div class="badge">🏆 World Cup 2026</div>
       <h1>Przewiduj. Rywalizuj.<span class="gold-line">Zdobądź chwałę.</span></h1>
-      <p>Wspólna pula zakładów na Mistrzostwa Świata 2026. 10 graczy, każdy mecz, jeden mistrz.</p>
+      <p>Wspólna pula zakładów na Mistrzostwa Świata 2026. 11 graczy, każdy mecz, jeden mistrz.</p>
       <div class="hero-note" style="margin-top:18px; font-size:0.8rem; color:var(--text-dim);">Zakłady można obstawiać do godziny przed startem meczu. Zakłady specjalne do piątku 12.06.2026.</div>
     </div>
     <div class="stats-row">
-      <div class="stat-card"><div class="icon">👥</div><div class="num">10</div><div class="lbl">Graczy</div></div>
+      <div class="stat-card"><div class="icon">👥</div><div class="num">11</div><div class="lbl">Graczy</div></div>
       <div class="stat-card"><div class="icon">🏆</div><div class="num">${FIXTURES.length}</div><div class="lbl">Meczów</div></div>
       <div class="stat-card"><div class="icon">⏱</div><div class="num">${played}</div><div class="lbl">Rozegranych</div></div>
       <div class="stat-card"><div class="icon">🎯</div><div class="num">5</div><div class="lbl">Maks. punktów</div></div>
