@@ -164,6 +164,15 @@
   .recap-result{ font-family:var(--font-mono); color:var(--gold); }
   .recap-bet{ font-size:0.75rem; color:var(--text-dim); flex-basis:100%; }
   .recap-pts{ font-size:0.75rem; padding:4px 10px; border-radius:999px; font-weight:800; text-transform:uppercase; letter-spacing:1px; flex-shrink:0; }
+  .form-list{ display:flex; flex-direction:column; gap:10px; }
+  .form-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .form-name{ font-weight:700; font-size:0.95rem; min-width:90px; }
+  .form-dots{ display:flex; gap:6px; }
+  .form-dot{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:800; font-size:0.75rem; }
+  .form-dot-empty{ background:var(--bg-panel); color:var(--text-dim); border:1px dashed var(--line); }
+  .form-total{ font-family:var(--font-mono); font-weight:800; font-size:1rem; color:var(--gold); flex-shrink:0; }
+  .form-total-label{ font-family:var(--font-body); font-weight:500; font-size:0.7rem; color:var(--text-dim); }
+  .form-comment{ font-size:0.85rem; color:var(--text-dim); flex-basis:100%; font-style:italic; }
 </style>
 </head>
 <body>
@@ -329,6 +338,52 @@ function totalsForPlayer(p){
   if(data.specialResult.topScorer && data.specialPicks[p]?.topScorer === data.specialResult.topScorer) pts+=5;
   if(data.specialResult.championTeam && data.specialPicks[p]?.championTeam === data.specialResult.championTeam) pts+=5;
   return {pts, won, lost};
+}
+
+// Returns the player's points earned on each of their last N played matches
+// (matches with a result, in chronological order, that the player had a bet on).
+function formForPlayer(p, n){
+  const data = state.data;
+  const played = FIXTURES
+    .filter(m => data.results[m.id] && data.bets[p+"|"+m.id])
+    .sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff));
+  const lastN = played.slice(-n);
+  const pts = lastN.map(m => calcPoints(data.bets[p+"|"+m.id], data.results[m.id]));
+  return { pts, total: pts.reduce((a,b)=>a+b, 0), matchesCount: lastN.length };
+}
+
+function formComment(name, total, matchesCount){
+  if(matchesCount === 0) return "Jeszcze za wcześnie na ocenę formy";
+  if(total >= 8) return `🔥 ${name} is on fire!`;
+  if(total >= 4) return "Nie narzekaj, że jest ciężko, skoro idziesz na sam szczyt";
+  if(total >= 1) return "🪵 Zmień dyscyplinę, chłopcze!";
+  return "🧳 Chłopie, pakuj walizę";
+}
+
+function renderFormRanking(){
+  const N = 5;
+  const rows = PLAYERS.map(p => {
+    const form = formForPlayer(p, N);
+    return { name: p, ...form };
+  }).sort((a,b) => b.total - a.total);
+
+  if(rows.every(r => r.matchesCount === 0)){
+    return '<div class="card">Ranking formy pojawi się po rozegraniu pierwszych meczów.</div>';
+  }
+
+  return `
+  <div class="form-list">
+    ${rows.map(r => `
+      <div class="form-card">
+        <div class="form-name">${r.name}</div>
+        <div class="form-dots">
+          ${r.pts.map(pts => `<span class="form-dot ${pts===3?'points-3':pts===1?'points-1':'points-0'}">${pts}</span>`).join('')}
+          ${Array.from({length: Math.max(0, N - r.pts.length)}).map(()=>'<span class="form-dot form-dot-empty">—</span>').join('')}
+        </div>
+        <div class="form-total">${r.total} <span class="form-total-label">/ ${N*3} pkt</span></div>
+        <div class="form-comment">${formComment(r.name, r.total, r.matchesCount)}</div>
+      </div>`).join('')}
+  </div>`;
 }
 
 /* ============== SUPABASE I/O ============== */
@@ -846,6 +901,13 @@ function renderLeaderboard(){
           </div>`;
         }).join('')}
       </div>
+    </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Ranking <span class="gold">formy</span></h2>
+        <div class="section-sub">Punkty z ostatnich 5 rozegranych meczów</div>
+      </div>
+      ${renderFormRanking()}
     </div>
     <div class="section">
       <div class="section-head">
