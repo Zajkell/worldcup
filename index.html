@@ -138,6 +138,17 @@
   .bet-1{ background:rgba(91,156,245,0.18); color:#7ab3ff; }
   .bet-0{ background:rgba(217,83,79,0.15); color:var(--red); }
   .bet-none{ color:var(--text-dim); }
+  .scorers-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+  .scorer-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px; }
+  .scorer-rank{ font-family:var(--font-display); font-size:1.1rem; color:var(--gold); width:28px; flex-shrink:0; text-align:center; }
+  .scorer-photo{ width:48px; height:48px; border-radius:50%; overflow:hidden; flex-shrink:0; background:var(--bg-panel); display:flex; align-items:center; justify-content:center; border:1px solid var(--line); }
+  .scorer-photo img{ width:100%; height:100%; object-fit:cover; }
+  .scorer-photo-placeholder{ font-size:1.3rem; opacity:0.4; }
+  .scorer-info{ flex:1; min-width:0; }
+  .scorer-name{ font-weight:700; font-size:0.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .scorer-meta{ font-size:0.72rem; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .scorer-goals{ font-family:var(--font-mono); font-weight:800; font-size:1.3rem; color:var(--gold); text-align:center; flex-shrink:0; }
+  .scorer-goals-label{ display:block; font-family:var(--font-body); font-weight:600; font-size:0.6rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; }
 </style>
 </head>
 <body>
@@ -254,7 +265,8 @@ const DEFAULT_DATA = {
   bets: PRESET_BETS,
   specialPicks: {},
   specialResult: { topScorer: null, championTeam: null },
-  credentials: {}
+  credentials: {},
+  topScorersLive: []
 };
 
 /* ============== STAN ============== */
@@ -453,6 +465,53 @@ function render(){
     app.innerHTML = renderNav() + renderHome();
   }
   attachHandlers();
+  if(state.view === "leaderboard" && state.user){
+    loadScorerPhotos();
+  }
+}
+
+// In-memory cache so we don't re-fetch Wikipedia images on every re-render
+const scorerPhotoCache = {};
+
+async function loadScorerPhotos(){
+  const list = state.data.topScorersLive || [];
+  list.forEach((s, i) => {
+    const container = document.getElementById('scorer-photo-' + i);
+    if(!container) return;
+    const name = s.name;
+    if(scorerPhotoCache[name] === undefined){
+      fetchWikipediaThumbnail(name).then(url => {
+        scorerPhotoCache[name] = url;
+        const el = document.getElementById('scorer-photo-' + i);
+        if(el && url){
+          el.innerHTML = `<img src="${url}" alt="${name}" loading="lazy">`;
+        }
+      });
+    } else if(scorerPhotoCache[name]){
+      container.innerHTML = `<img src="${scorerPhotoCache[name]}" alt="${name}" loading="lazy">`;
+    }
+  });
+}
+
+async function fetchWikipediaThumbnail(name){
+  try{
+    const query = encodeURIComponent(name + " footballer");
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${query}&format=json&origin=*&srlimit=1`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
+    const hit = searchData?.query?.search?.[0];
+    if(!hit) return null;
+    const pageTitle = encodeURIComponent(hit.title);
+    const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${pageTitle}&prop=pageimages&format=json&pithumbsize=100&origin=*`;
+    const imgRes = await fetch(imgUrl);
+    const imgData = await imgRes.json();
+    const pages = imgData?.query?.pages || {};
+    const page = Object.values(pages)[0];
+    return page?.thumbnail?.source || null;
+  } catch(e){
+    console.error("Wikipedia photo fetch failed for", name, e);
+    return null;
+  }
 }
 
 function errBanner(){
@@ -684,7 +743,36 @@ function renderLeaderboard(){
       </div>
       ${renderBetsOverview()}
     </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Król strzelców <span class="gold">live</span></h2>
+        <div class="section-sub">Aktualizowane automatycznie z danych turnieju</div>
+      </div>
+      ${renderTopScorersLive()}
+    </div>
   </main>`;
+}
+
+function renderTopScorersLive(){
+  const list = state.data.topScorersLive || [];
+  if(list.length === 0){
+    return '<div class="card">Ranking strzelców pojawi się po rozegraniu pierwszych meczów z golami.</div>';
+  }
+  return `
+  <div class="scorers-grid">
+    ${list.map((s,i)=>`
+      <div class="scorer-card">
+        <div class="scorer-rank">#${i+1}</div>
+        <div class="scorer-photo" id="scorer-photo-${i}" data-player-name="${s.name}">
+          <div class="scorer-photo-placeholder">⚽</div>
+        </div>
+        <div class="scorer-info">
+          <div class="scorer-name">${s.name}</div>
+          <div class="scorer-meta">${s.team || s.nationality || ''}</div>
+        </div>
+        <div class="scorer-goals">${s.goals}<span class="scorer-goals-label">gole</span></div>
+      </div>`).join('')}
+  </div>`;
 }
 
 function renderBetsOverview(){
