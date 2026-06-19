@@ -6,6 +6,7 @@
 <title>World Cup 2026 — Pula zakładów</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Barlow+Condensed:wght@500;600;700;800;900&display=swap');
   :root{
     --bg-deep:#0a1410;
     --bg-card:#142922;
@@ -27,7 +28,6 @@
     background:radial-gradient(ellipse at top,#14231d 0%,var(--bg-deep) 55%,#060c09 100%);
     color:var(--text); min-height:100vh; line-height:1.5;
   }
-  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Barlow+Condensed:wght@500;600;700;800;900&display=swap');
 
   nav{position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
     padding:18px 40px; background:rgba(10,20,16,0.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
@@ -1371,7 +1371,7 @@ function attachHandlers(){
   });
 
   document.querySelectorAll('[data-nav]').forEach(b=>{
-    b.addEventListener('click', ()=>{
+    b.addEventListener('click', async ()=>{
       const v = b.dataset.nav;
       if(v === 'logout'){ state.user = null; state.view='home'; render(); return; }
       if(v === 'refresh'){ loadData(); return; }
