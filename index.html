@@ -89,6 +89,8 @@
     font-weight:800; cursor:pointer; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.5px; font-family:var(--font-body);}
   .lock-tag{font-size:0.68rem; padding:4px 10px; border-radius:999px; border:1px solid var(--red); color:var(--red);
     text-transform:uppercase; letter-spacing:1px; font-weight:700;}
+  .saved-bet-tag{font-size:0.78rem; color:var(--green-bright); margin-top:6px; padding:5px 10px; background:rgba(46,168,97,0.08); border-radius:6px; border:1px solid rgba(46,168,97,0.25); font-weight:600;}
+  .saved-bet-tag.no-bet{color:var(--gold); background:rgba(245,197,66,0.08); border-color:rgba(245,197,66,0.25);}
   .result-tag{font-family:var(--font-mono); font-weight:800; font-size:1.3rem; color:var(--gold); min-width:80px; text-align:center;}
   .points-tag{font-size:0.68rem; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:1px; font-weight:800;}
   .points-3{background:rgba(46,168,97,0.18); color:var(--green-bright); border:1px solid var(--green-bright);}
@@ -1041,13 +1043,17 @@ function renderMatchCard(m){
       </div>
       <span class="lock-tag">🔒 Zablokowane</span>`;
   } else {
+    const savedBetLabel = myBet
+      ? `<div class="saved-bet-tag">✅ Zapisany zakład: <b>${myBet.home}:${myBet.away}</b></div>`
+      : `<div class="saved-bet-tag no-bet">⚠️ Brak zakładu</div>`;
     rightSide = `
       <div class="score-input-group">
         <input type="number" min="0" max="20" class="score-box" id="bet-home-${m.id}" value="${myBet?myBet.home:''}" placeholder="-">
         <span class="dash">:</span>
         <input type="number" min="0" max="20" class="score-box" id="bet-away-${m.id}" value="${myBet?myBet.away:''}" placeholder="-">
       </div>
-      <button class="save-bet" data-save-bet="${m.id}">Zapisz zakład</button>`;
+      <button class="save-bet" data-save-bet="${m.id}">Zapisz zakład</button>
+      ${savedBetLabel}`;
   }
 
   return `
