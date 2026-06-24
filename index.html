@@ -453,22 +453,19 @@ function playerCardStats(p){
     forStat = Math.round(40 + (form.total / 15) * 59);
   }
 
-  // ODW (odwaga): average total goals (home+away) in the player's bets, scaled
-  let odw = 50;
-  const allBetsForPlayer = FIXTURES
-    .map(m => data.bets[p+"|"+m.id])
-    .filter(b => b);
-  if(allBetsForPlayer.length > 0){
-    const avgGoals = allBetsForPlayer.reduce((sum,b) => sum + b.home + b.away, 0) / allBetsForPlayer.length;
-    // avg 1 goal -> ~40, avg 3 goals -> ~70, avg 5+ goals -> ~99
-    odw = Math.round(Math.min(99, Math.max(40, 30 + avgGoals * 14)));
+  // SKU (skuteczność): % of played matches where the player earned at least 1pt (correct winner or exact score)
+  let sku = 50;
+  if(playedCount > 0){
+    const hits = played.filter(m => calcPoints(data.bets[p+"|"+m.id], data.results[m.id]) >= 1).length;
+    const pct = hits / playedCount; // 0..1
+    sku = Math.round(40 + pct * 59); // 40-99 range
   }
 
   // OVR: weighted blend of the three stats, nudged by overall tournament points
   const totals = totalsForPlayer(p);
   const maxPossiblePts = Math.max(1, playedCount * 3 + 10); // rough ceiling incl. special bets
   const ptsBonus = Math.min(10, Math.round((totals.pts / maxPossiblePts) * 10));
-  let ovr = Math.round((cel * 0.4 + forStat * 0.35 + odw * 0.25));
+  let ovr = Math.round((cel * 0.4 + forStat * 0.35 + sku * 0.25));
   ovr = Math.min(99, Math.max(40, ovr + ptsBonus - 5));
 
   // Card tier based on OVR
@@ -480,13 +477,13 @@ function playerCardStats(p){
 
   // Playful "position" label based on dominant trait
   let position;
-  const maxStat = Math.max(cel, forStat, odw);
-  if(maxStat === odw && odw >= 70) position = 'OPT'; // Optymista
+  const maxStat = Math.max(cel, forStat, sku);
+  if(maxStat === sku && sku >= 70) position = 'SKU'; // Skuteczny
   else if(maxStat === cel && cel >= 70) position = 'WYR'; // Wyrocznia
   else if(maxStat === forStat && forStat >= 70) position = 'FOR'; // W formie
   else position = 'GRA'; // Gracz (neutral)
 
-  return { ovr, cel, for: forStat, odw, tier, position, playedCount };
+  return { ovr, cel, for: forStat, sku, tier, position, playedCount };
 }
 
 function renderFormRanking(){
@@ -571,8 +568,8 @@ function renderFutCard(r){
     <text x="50" y="252" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="10" letter-spacing="2" fill="${c.text}" opacity="0.7">CEL</text>
     <text x="100" y="238" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="22" fill="${c.text}">${r.for}</text>
     <text x="100" y="252" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="10" letter-spacing="2" fill="${c.text}" opacity="0.7">FOR</text>
-    <text x="150" y="238" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="22" fill="${c.text}">${r.odw}</text>
-    <text x="150" y="252" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="10" letter-spacing="2" fill="${c.text}" opacity="0.7">ODW</text>
+    <text x="150" y="238" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="22" fill="${c.text}">${r.sku}</text>
+    <text x="150" y="252" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="10" letter-spacing="2" fill="${c.text}" opacity="0.7">SKU</text>
     <text x="100" y="267" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="8" letter-spacing="3" fill="${c.text}" opacity="0.5">MUNDIAL CARDS</text>
   </svg>`;
 }
@@ -1129,7 +1126,7 @@ function renderLeaderboard(){
     <div class="section">
       <div class="section-head">
         <h2>Karty <span class="gold">graczy</span></h2>
-        <div class="section-sub">CEL = celność typów, FOR = forma, ODW = odwaga (średnia goli w typach)</div>
+        <div class="section-sub">CEL = % dokładnych wyników (3pkt), FOR = forma, SKU = skuteczność (% meczów z min. 1pkt)</div>
       </div>
       ${renderPlayerCards()}
     </div>
