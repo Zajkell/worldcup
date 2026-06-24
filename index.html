@@ -380,7 +380,7 @@ let state = {
 
 /* ============== POMOCNICZE ============== */
 function isLocked(kickoff){
-  return new Date() >= new Date(new Date(kickoff).getTime() - 1000*60*60);
+  return new Date() >= new Date(new Date(kickoff).getTime() - 1000*60*15);
 }
 function fmtDate(iso){
   const d = new Date(iso);
@@ -966,7 +966,7 @@ function renderHome(){
       <div class="badge">🏆 World Cup 2026</div>
       <h1>Przewiduj. Rywalizuj.<span class="gold-line">Zdobądź chwałę.</span></h1>
       <p>Wspólna pula zakładów na Mistrzostwa Świata 2026. 11 graczy, każdy mecz, jeden mistrz.</p>
-      <div class="hero-note" style="margin-top:18px; font-size:0.8rem; color:var(--text-dim);">Zakłady można obstawiać do godziny przed startem meczu. Zakłady specjalne do piątku 12.06.2026.</div>
+      <div class="hero-note" style="margin-top:18px; font-size:0.8rem; color:var(--text-dim);">Zakłady można obstawiać do 15 minut przed startem meczu. Zakłady specjalne do piątku 12.06.2026.</div>
     </div>
     <div class="stats-row">
       <div class="stat-card"><div class="icon">👥</div><div class="num">11</div><div class="lbl">Graczy</div></div>
@@ -1000,7 +1000,7 @@ function renderMatches(){
     <div class="section" style="margin-top:40px;">
       <div class="section-head">
         <h2>Nadchodzące <span class="gold">mecze</span></h2>
-        <div class="section-sub">Zakłady blokowane godzinę przed startem</div>
+        <div class="section-sub">Zakłady blokowane 15 minut przed startem</div>
       </div>
       ${upcoming.map(renderMatchCard).join('') || '<div class="card">Brak nadchodzących meczów.</div>'}
     </div>
@@ -1394,7 +1394,7 @@ function attachHandlers(){
           const ok = await registerPush(state.user.name);
           if(ok){
             if(btn){ btn.textContent = '🔕 Wył. powiadomienia'; btn.style.color = 'var(--gold)'; }
-            state.successMessage = '🔔 Powiadomienia włączone! Dostaniesz alert 1h przed meczem.';
+            state.successMessage = '🔔 Powiadomienia włączone! Dostaniesz alert 15 min przed meczem.';
             setTimeout(()=>{ state.successMessage = null; render(); }, 3500);
           } else {
             state.error = 'Nie udało się włączyć powiadomień. Sprawdź czy przeglądarka zezwala na powiadomienia.';
