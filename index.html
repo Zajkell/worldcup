@@ -573,12 +573,12 @@ function renderPlayerCards(){
     return { name: p, ...stats, totalPts: totals.pts };
   });
 
-  // Step 2: normalize each stat relatively across all players (45-88 range)
-  const celNorm  = normalizeGroup(rawStats.map(r => r.celRaw), 45, 88);
-  const forNorm  = normalizeGroup(rawStats.map(r => r.forRaw), 45, 88);
-  const skuNorm  = normalizeGroup(rawStats.map(r => r.skuRaw), 45, 88);
-  // Points ranking: relative bonus 0-12 based on total tournament points
-  const ptsNorm  = normalizeGroup(rawStats.map(r => r.totalPts), 0, 12);
+  // Step 2: normalize each stat relatively across all players (42-92 range)
+  const celNorm  = normalizeGroup(rawStats.map(r => r.celRaw), 42, 92);
+  const forNorm  = normalizeGroup(rawStats.map(r => r.forRaw), 42, 92);
+  const skuNorm  = normalizeGroup(rawStats.map(r => r.skuRaw), 42, 92);
+  // Points ranking: relative bonus 0-8 based on total tournament points
+  const ptsNorm  = normalizeGroup(rawStats.map(r => r.totalPts), 0, 8);
 
   // Step 3: compute OVR and tier for each player
   const rows = rawStats.map((r, i) => {
