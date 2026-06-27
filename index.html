@@ -567,31 +567,38 @@ function renderFutCard(r){
 
 function renderPlayerCards(){
   // Step 1: get raw stats for all players
-  const rawStats = PLAYERS.map(p => ({ name: p, ...playerCardStats(p) }));
+  const rawStats = PLAYERS.map(p => {
+    const stats = playerCardStats(p);
+    const totals = totalsForPlayer(p);
+    return { name: p, ...stats, totalPts: totals.pts };
+  });
 
-  // Step 2: normalize each stat relatively across all players
-  const celNorm = normalizeGroup(rawStats.map(r => r.celRaw), 48, 94);
-  const forNorm = normalizeGroup(rawStats.map(r => r.forRaw), 48, 94);
-  const skuNorm = normalizeGroup(rawStats.map(r => r.skuRaw), 48, 94);
+  // Step 2: normalize each stat relatively across all players (45-88 range)
+  const celNorm  = normalizeGroup(rawStats.map(r => r.celRaw), 45, 88);
+  const forNorm  = normalizeGroup(rawStats.map(r => r.forRaw), 45, 88);
+  const skuNorm  = normalizeGroup(rawStats.map(r => r.skuRaw), 45, 88);
+  // Points ranking: relative bonus 0-12 based on total tournament points
+  const ptsNorm  = normalizeGroup(rawStats.map(r => r.totalPts), 0, 12);
 
   // Step 3: compute OVR and tier for each player
   const rows = rawStats.map((r, i) => {
     const cel = celNorm[i];
     const forStat = forNorm[i];
     const sku = skuNorm[i];
+    const ptsBonus = ptsNorm[i]; // 0-12 pts bonus based on leaderboard position
 
-    // Activity bonus: +0 to +8 depending on how many matches they've bet on
-    const actBonus = Math.round(r.activityRaw * 8);
+    // Activity bonus: +0 to +3 for betting on more matches
+    const actBonus = Math.round(r.activityRaw * 3);
 
-    // OVR: weighted blend + activity bonus
-    let ovr = Math.round(cel * 0.4 + forStat * 0.35 + sku * 0.25) + actBonus;
-    ovr = Math.min(99, Math.max(48, ovr));
+    // OVR: weighted blend of stats + leaderboard bonus + activity bonus
+    let ovr = Math.round(cel * 0.35 + forStat * 0.30 + sku * 0.20) + ptsBonus + actBonus;
+    ovr = Math.min(99, Math.max(45, ovr));
 
-    // Tier: lower thresholds for faster progression
+    // Tier: TOTS reserved for genuinely elite performance
     let tier;
-    if(ovr >= 83) tier = 'tots';
+    if(ovr >= 82) tier = 'tots';
     else if(ovr >= 72) tier = 'gold';
-    else if(ovr >= 61) tier = 'silver';
+    else if(ovr >= 62) tier = 'silver';
     else tier = 'bronze';
 
     // Position label based on dominant stat
