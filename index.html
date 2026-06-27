@@ -439,51 +439,42 @@ function playerCardStats(p){
   const playedCount = played.length;
 
   // CEL (celność): % of played matches where the player hit the exact score (3pts)
-  let cel = 50; // neutral default before any matches
+  let celRaw = 0;
   if(playedCount > 0){
     const exactHits = played.filter(m => calcPoints(data.bets[p+"|"+m.id], data.results[m.id]) === 3).length;
-    const pct = exactHits / playedCount; // 0..1
-    cel = Math.round(40 + pct * 59); // 40-99 range
+    celRaw = exactHits / playedCount; // 0..1
   }
 
-  // FOR (forma): points from last 5 played matches, scaled 0-15 -> 40-99
+  // FOR (forma): points from last 5 played matches, 0-15
   const form = formForPlayer(p, 5);
-  let forStat = 50;
-  if(form.matchesCount > 0){
-    forStat = Math.round(40 + (form.total / 15) * 59);
-  }
+  const forRaw = form.matchesCount > 0 ? form.total / 15 : 0; // 0..1
 
-  // SKU (skuteczność): % of played matches where the player earned at least 1pt (correct winner or exact score)
-  let sku = 50;
+  // SKU (skuteczność): % of played matches with at least 1pt
+  let skuRaw = 0;
   if(playedCount > 0){
     const hits = played.filter(m => calcPoints(data.bets[p+"|"+m.id], data.results[m.id]) >= 1).length;
-    const pct = hits / playedCount; // 0..1
-    sku = Math.round(40 + pct * 59); // 40-99 range
+    skuRaw = hits / playedCount; // 0..1
   }
 
-  // OVR: weighted blend of the three stats, nudged by overall tournament points
-  const totals = totalsForPlayer(p);
-  const maxPossiblePts = Math.max(1, playedCount * 3 + 10); // rough ceiling incl. special bets
-  const ptsBonus = Math.min(10, Math.round((totals.pts / maxPossiblePts) * 10));
-  let ovr = Math.round((cel * 0.4 + forStat * 0.35 + sku * 0.25));
-  ovr = Math.min(99, Math.max(40, ovr + ptsBonus - 5));
+  // Activity bonus: more bets placed = higher base (0..1 based on % of played matches bet on)
+  const totalPlayed = FIXTURES.filter(m => data.results[m.id]).length;
+  const activityRaw = totalPlayed > 0 ? Math.min(1, playedCount / totalPlayed) : 0;
 
-  // Card tier based on OVR
-  let tier;
-  if(ovr >= 85) tier = 'tots';
-  else if(ovr >= 75) tier = 'gold';
-  else if(ovr >= 65) tier = 'silver';
-  else tier = 'bronze';
+  return { celRaw, forRaw, skuRaw, activityRaw, playedCount };
+}
 
-  // Playful "position" label based on dominant trait
-  let position;
-  const maxStat = Math.max(cel, forStat, sku);
-  if(maxStat === sku && sku >= 70) position = 'SKU'; // Skuteczny
-  else if(maxStat === cel && cel >= 70) position = 'WYR'; // Wyrocznia
-  else if(maxStat === forStat && forStat >= 70) position = 'FOR'; // W formie
-  else position = 'GRA'; // Gracz (neutral)
+// Scales a raw 0..1 value to the range [min, max]
+function scaleRelative(raw, minVal, maxVal){
+  return Math.round(minVal + raw * (maxVal - minVal));
+}
 
-  return { ovr, cel, for: forStat, sku, tier, position, playedCount };
+// Normalizes an array of raw values [0..1] to [minOut, maxOut] relative to each other.
+// If all values are equal, everyone gets (minOut+maxOut)/2.
+function normalizeGroup(values, minOut, maxOut){
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  if(max === min) return values.map(() => Math.round((minOut + maxOut) / 2));
+  return values.map(v => Math.round(minOut + ((v - min) / (max - min)) * (maxOut - minOut)));
 }
 
 function renderFormRanking(){
@@ -575,8 +566,44 @@ function renderFutCard(r){
 }
 
 function renderPlayerCards(){
-  const rows = PLAYERS.map(p => ({ name: p, ...playerCardStats(p) }))
-    .sort((a,b) => b.ovr - a.ovr);
+  // Step 1: get raw stats for all players
+  const rawStats = PLAYERS.map(p => ({ name: p, ...playerCardStats(p) }));
+
+  // Step 2: normalize each stat relatively across all players
+  const celNorm = normalizeGroup(rawStats.map(r => r.celRaw), 48, 94);
+  const forNorm = normalizeGroup(rawStats.map(r => r.forRaw), 48, 94);
+  const skuNorm = normalizeGroup(rawStats.map(r => r.skuRaw), 48, 94);
+
+  // Step 3: compute OVR and tier for each player
+  const rows = rawStats.map((r, i) => {
+    const cel = celNorm[i];
+    const forStat = forNorm[i];
+    const sku = skuNorm[i];
+
+    // Activity bonus: +0 to +8 depending on how many matches they've bet on
+    const actBonus = Math.round(r.activityRaw * 8);
+
+    // OVR: weighted blend + activity bonus
+    let ovr = Math.round(cel * 0.4 + forStat * 0.35 + sku * 0.25) + actBonus;
+    ovr = Math.min(99, Math.max(48, ovr));
+
+    // Tier: lower thresholds for faster progression
+    let tier;
+    if(ovr >= 83) tier = 'tots';
+    else if(ovr >= 72) tier = 'gold';
+    else if(ovr >= 61) tier = 'silver';
+    else tier = 'bronze';
+
+    // Position label based on dominant stat
+    const maxStat = Math.max(cel, forStat, sku);
+    let position;
+    if(maxStat === sku && sku >= 68) position = 'SKU';
+    else if(maxStat === cel && cel >= 68) position = 'WYR';
+    else if(maxStat === forStat && forStat >= 68) position = 'FOR';
+    else position = 'GRA';
+
+    return { name: r.name, ovr, cel, for: forStat, sku, tier, position, playedCount: r.playedCount };
+  }).sort((a,b) => b.ovr - a.ovr);
 
   return `
   <div class="fifa-grid">
