@@ -334,7 +334,25 @@ const FIXTURES = [
   {id:"m69", group:"Grupa K", home:"Colombia", away:"Portugal", kickoff:"2026-06-27T23:30:00Z"},
   {id:"m70", group:"Grupa K", home:"DR Congo", away:"Uzbekistan", kickoff:"2026-06-27T23:30:00Z"},
   {id:"m71", group:"Grupa J", home:"Algeria", away:"Austria", kickoff:"2026-06-28T02:00:00Z"},
-  {id:"m72", group:"Grupa J", home:"Jordan", away:"Argentina", kickoff:"2026-06-28T02:00:00Z"}
+  {id:"m72", group:"Grupa J", home:"Jordan", away:"Argentina", kickoff:"2026-06-28T02:00:00Z"},
+
+  // 1/16 finału
+  {id:"m73", group:"1/16", home:"South Africa", away:"Canada", kickoff:"2026-06-28T19:00:00Z"},
+  {id:"m74", group:"1/16", home:"Brazil", away:"Japan", kickoff:"2026-06-28T17:00:00Z"},
+  {id:"m75", group:"1/16", home:"Germany", away:"Paraguay", kickoff:"2026-06-29T20:30:00Z"},
+  {id:"m76", group:"1/16", home:"Netherlands", away:"Morocco", kickoff:"2026-06-29T01:00:00Z"},
+  {id:"m77", group:"1/16", home:"Ivory Coast", away:"Norway", kickoff:"2026-06-30T17:00:00Z"},
+  {id:"m78", group:"1/16", home:"France", away:"Sweden", kickoff:"2026-06-30T21:00:00Z"},
+  {id:"m79", group:"1/16", home:"Mexico", away:"Ecuador", kickoff:"2026-07-01T01:00:00Z"},
+  {id:"m80", group:"1/16", home:"England", away:"DR Congo", kickoff:"2026-07-01T16:00:00Z"},
+  {id:"m81", group:"1/16", home:"Belgium", away:"Senegal", kickoff:"2026-07-01T20:00:00Z"},
+  {id:"m82", group:"1/16", home:"USA", away:"Bosnia and Herzegovina", kickoff:"2026-07-02T00:00:00Z"},
+  {id:"m83", group:"1/16", home:"Spain", away:"Austria", kickoff:"2026-07-02T19:00:00Z"},
+  {id:"m84", group:"1/16", home:"Portugal", away:"Croatia", kickoff:"2026-07-02T23:00:00Z"},
+  {id:"m85", group:"1/16", home:"Switzerland", away:"Algeria", kickoff:"2026-07-03T03:00:00Z"},
+  {id:"m86", group:"1/16", home:"Australia", away:"Egypt", kickoff:"2026-07-03T18:00:00Z"},
+  {id:"m87", group:"1/16", home:"Argentina", away:"Cape Verde", kickoff:"2026-07-03T22:00:00Z"},
+  {id:"m88", group:"1/16", home:"Colombia", away:"Ghana", kickoff:"2026-07-04T01:30:00Z"}
 ];
 
 const PRESET_BETS = {
@@ -1258,9 +1276,11 @@ function renderSpecial(){
           <button class="save-bet" data-save-special="topScorer" style="width:100%; margin-top:6px;">Zapisz typ</button>
         `}
       ` : `
+        ${state.user.isAdmin ? `
         <div class="all-picks">
           ${PLAYERS.map(p=>`<div class="pick-row"><span>${p}</span><span>${data.specialPicks[p]?.topScorer || '—'}</span></div>`).join('')}
         </div>
+        ` : `<div class="all-picks"><div class="pick-row"><span>Twój typ:</span><span><b>${myPick.topScorer || '— brak —'}</b></span></div></div>`}
       `}
     </div>`;
 
@@ -1277,9 +1297,11 @@ function renderSpecial(){
           <button class="save-bet" data-save-special="championTeam" style="width:100%; margin-top:6px;">Zapisz typ</button>
         `}
       ` : `
+        ${state.user.isAdmin ? `
         <div class="all-picks">
           ${PLAYERS.map(p=>`<div class="pick-row"><span>${p}</span><span>${data.specialPicks[p]?.championTeam || '—'}</span></div>`).join('')}
         </div>
+        ` : `<div class="all-picks"><div class="pick-row"><span>Twój typ:</span><span><b>${myPick.championTeam || '— brak —'}</b></span></div></div>`}
       `}
     </div>`;
 
@@ -1301,17 +1323,31 @@ function renderSpecial(){
 
 function renderActivity(){
   const log = state.data.activityLog || [];
+  const isAdmin = state.user.isAdmin;
+  const myName = state.user.name;
+
+  // Non-admin players only see: match results, their own bets, and points earned by anyone
+  // They don't see other players' bets (to avoid influencing their picks)
+  const visibleLog = isAdmin ? log : log.filter(entry => {
+    const msg = entry.message || '';
+    // Hide bet entries from other players
+    if(msg.includes('obstawił') && !msg.startsWith(myName + ' obstawił')) return false;
+    // Hide special pick entries from other players
+    if(msg.includes('wybrał typ') && !msg.startsWith(myName + ' wybrał')) return false;
+    return true;
+  });
+
   return `
   <main>
     ${errBanner()}${successBanner()}
     <div class="section" style="margin-top:40px;">
       <div class="section-head">
         <h2>Aktywność <span class="gold">na żywo</span></h2>
-        <div class="section-sub">Historia zakładów, wyników i typów (ostatnie 100 zdarzeń)</div>
+        <div class="section-sub">${isAdmin ? 'Historia zakładów, wyników i typów (ostatnie 100 zdarzeń)' : 'Wyniki meczów i Twoje zakłady'}</div>
       </div>
-      ${log.length === 0 ? '<div class="card">Brak aktywności — pierwsze zakłady i wyniki pojawią się tutaj.</div>' : `
+      ${visibleLog.length === 0 ? '<div class="card">Brak aktywności — wyniki meczów pojawią się tutaj.</div>' : `
       <div class="activity-feed">
-        ${log.map(entry => `
+        ${visibleLog.map(entry => `
           <div class="activity-item">
             <div class="activity-message">${entry.message}</div>
             <div class="activity-time">${fmtDateTime(entry.timestamp)}</div>
