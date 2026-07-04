@@ -1,0 +1,27 @@
+name: Fill match results
+
+# Auto-fills World Cup 2026 regulation-time results into Supabase from ESPN.
+# Runs in the cloud on GitHub's servers — no personal computer needs to be on.
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes (UTC)
+  workflow_dispatch: {}        # allow manual "Run workflow" from the Actions tab
+
+# No secrets needed: Supabase publishable key + fixtures are read from index.html.
+permissions:
+  contents: read
+
+concurrency:
+  group: fill-results
+  cancel-in-progress: false
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Fill results
+        run: node scripts/fill-results.mjs
