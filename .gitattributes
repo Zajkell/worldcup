@@ -1,0 +1,6 @@
+# Keep source files LF on every platform so the auto-fixture bot never
+# produces line-ending-flip diffs.
+*.html text eol=lf
+*.mjs  text eol=lf
+*.yml  text eol=lf
+*.md   text eol=lf

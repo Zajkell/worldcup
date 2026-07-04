@@ -1,0 +1,38 @@
+name: Fill knockout fixtures
+
+# As teams advance, adds the next fully-resolved knockout pairings (from ESPN)
+# into FIXTURES in index.html and commits — so new rounds appear automatically,
+# no personal computer required. Only adds a match once BOTH teams are known.
+on:
+  schedule:
+    - cron: "20 * * * *"   # hourly (offset from the results job)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write          # allow committing index.html back to the repo
+
+concurrency:
+  group: fill-fixtures
+  cancel-in-progress: false
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Add resolved knockout pairings
+        run: node scripts/fill-fixtures.mjs
+      - name: Commit & push if changed
+        run: |
+          if [ -n "$(git status --porcelain index.html)" ]; then
+            git config user.name "worldcup-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add index.html
+            git commit -m "Auto-add resolved knockout pairings"
+            git push
+          else
+            echo "Brak nowych par."
+          fi
